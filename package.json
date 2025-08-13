@@ -1,0 +1,43 @@
+{
+  "name": "spot-each-equal",
+  "version": "1.0.0",
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "@expo-google-fonts/inter": "^0.2.3",
+    "@expo/vector-icons": "^14.1.0",
+    "@formatjs/intl-pluralrules": "^5.4.4",
+    "expo": "^53.0.20",
+    "expo-constants": "~17.1.7",
+    "expo-font": "~13.3.2",
+    "expo-linear-gradient": "~14.1.5",
+    "expo-linking": "~7.1.7",
+    "expo-localization": "~16.1.6",
+    "expo-router": "~5.1.4",
+    "expo-splash-screen": "~0.30.10",
+    "expo-status-bar": "~2.2.3",
+    "i18next": "^23.7.16",
+    "lucide-react-native": "^0.447.0",
+    "react": "19.0.0",
+    "react-i18next": "^13.5.0",
+    "react-native": "0.79.5",
+    "react-native-gesture-handler": "~2.24.0",
+    "react-native-reanimated": "~3.17.4",
+    "react-native-safe-area-context": "5.4.0",
+    "react-native-screens": "~4.11.1",
+    "react-native-svg": "15.11.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@types/node": "^24.2.1",
+    "@types/react": "~19.0.10",
+    "@types/react-native": "~0.73.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "Spot Each Equal",
+    "slug": "spot-each-equal",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./src/assets/icons/fox.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./src/assets/icons/tree.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#667eea"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.mycompanyname.spoteachequal"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./src/assets/icons/adaptive_icon.png",
+        "backgroundColor": "#667eea"
+      },
+      "package": "com.mycompanyname.spoteachequal"
+    },
+    "web": {
+      "favicon": "./src/assets/icons/heart.png",
+      "output": "static"
+    },
+    "plugins": [
+      "expo-localization",
+      "expo-router",
+      "expo-font"
+    ],
+    "scheme": "spot-each-equal"
+  }
+}
