@@ -1,16 +1,5 @@
 import * as Icons from "@/assets/icons";
-
-type CardType = {
-  id: string;
-  symbols: string[];
-};
-
-export const findMatchingSymbol = (cardA: CardType, cardB: CardType): string | null => {
-  if (!cardA || !cardB) return null;
-  const match = cardA.symbols.find((symbol) => cardB.symbols.includes(symbol));
-  return match || null;
-};
-
+console.info(Icons);
 
 type SymbolData = {
   icon: string; // or actual imported icon type
@@ -26,17 +15,25 @@ type Card = {
 const SYMBOLS_PER_CARD = 8;
 
 // Helper: generate Spot It deck
-function generateSpotItDeck(symbols: string[], symbolsPerCard: number): string[][] {
+function generateSpotItDeck(
+  symbols: string[],
+  symbolsPerCard: number
+): string[][] {
   const n = symbolsPerCard - 1;
   const totalSymbolsNeeded = n * n + n + 1;
   if (symbols.length < totalSymbolsNeeded) {
-    throw new Error(`Need at least ${totalSymbolsNeeded} symbols to build a deck with ${symbolsPerCard} per card`);
+    throw new Error(
+      `Need at least ${totalSymbolsNeeded} symbols to build a deck with ${symbolsPerCard} per card`
+    );
   }
 
   const deck: string[][] = [];
 
   // First card
-  const firstCard = Array.from({ length: symbolsPerCard }, (_, i) => symbols[i]);
+  const firstCard = Array.from(
+    { length: symbolsPerCard },
+    (_, i) => symbols[i]
+  );
   deck.push(firstCard);
 
   // n cards starting with first symbol
@@ -63,18 +60,18 @@ function generateSpotItDeck(symbols: string[], symbolsPerCard: number): string[]
   return deck;
 }
 
-export function generateCards(): Card[] {
-  const allIcons = Object.keys(Icons); // ["icon1", "icon2", ...]
+export const generateCards = (): Card[] => {
+  const allIcons = Object.keys(Icons);
   const deckSymbolSets = generateSpotItDeck(allIcons, SYMBOLS_PER_CARD);
 
   return deckSymbolSets.map((symbolSet, cardIndex) => ({
     id: `card-${cardIndex}`,
-    symbols: symbolSet.map(iconName => ({
+    symbols: symbolSet.map((iconName) => ({
       icon: iconName,
       position: {
-        x: Math.random(), // 0 to 1 relative position
-        y: Math.random()
-      }
-    }))
+        x: Math.random(),
+        y: Math.random(),
+      },
+    })),
   }));
-}
+};

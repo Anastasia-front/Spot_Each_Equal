@@ -1,3 +1,4 @@
+import { languages } from "@/constants";
 import { Check, Globe, Info } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import {
@@ -12,29 +13,23 @@ import {
 const SettingsScreen = () => {
   const { t, i18n } = useTranslation();
 
-  const languages = [
-    { code: "en", name: "English", flag: "🇺🇸" },
-    { code: "ua", name: "Українська", flag: "🇺🇦" },
-    { code: "fr", name: "Français", flag: "🇫🇷" },
-  ];
-
   const handleLanguageChange = (languageCode: string) => {
     i18n.changeLanguage(languageCode);
   };
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>{t("buttons.settings")}</Text>
       </View>
 
       <ScrollView style={styles.content}>
+        {/* Language Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Globe size={24} color="#667eea" />
-            <Text style={styles.sectionTitle}>
-              Language / Мова / Langue
-            </Text>
+            <Text style={styles.sectionTitle}>{t("language")}</Text>
           </View>
 
           <View style={styles.sectionContent}>
@@ -67,30 +62,37 @@ const SettingsScreen = () => {
           </View>
         </View>
 
+        {/* About Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Info size={24} color="#667eea" />
-            <Text style={styles.sectionTitle}>About</Text>
+            <Text style={styles.sectionTitle}>{t("aboutTitle")}</Text>
           </View>
 
           <View style={styles.aboutCard}>
             <Text style={styles.aboutTitle}>{t("gameTitle")}</Text>
-            <Text style={styles.aboutText}>
-              A fast-paced card matching game where every pair of cards shares
-              exactly one identical symbol. Test your observation skills and
-              reaction time in this beautifully designed mobile experience!
-            </Text>
+            <Text style={styles.aboutText}>{t("aboutDescription")}</Text>
+
             <View style={styles.gameFeatures}>
-              <Text style={styles.featureTitle}>Game Features:</Text>
+              <Text style={styles.featureTitle}>{t("gameFeaturesTitle")}</Text>
               <Text style={styles.featureItem}>
-                • 55 unique hexagonal cards
+                • {t("gameFeatures.cards")}
               </Text>
-              <Text style={styles.featureItem}>• 6 different game modes</Text>
-              <Text style={styles.featureItem}>• Multiplayer support</Text>
-              <Text style={styles.featureItem}>• Multiple languages</Text>
-              <Text style={styles.featureItem}>• Smooth animations</Text>
+              <Text style={styles.featureItem}>
+                • {t("gameFeatures.modes")}
+              </Text>
+              <Text style={styles.featureItem}>
+                • {t("gameFeatures.multiplayer")}
+              </Text>
+              <Text style={styles.featureItem}>
+                • {t("gameFeatures.languages")}
+              </Text>
+              <Text style={styles.featureItem}>
+                • {t("gameFeatures.animations")}
+              </Text>
             </View>
-            <Text style={styles.versionText}>Version 1.0.0</Text>
+
+            <Text style={styles.versionText}>{t("version")} 1.0.0</Text>
           </View>
         </View>
       </ScrollView>

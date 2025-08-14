@@ -84,9 +84,7 @@ const HomeScreen = () => {
           </ScrollView>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>
-              Find the matching symbol between any two cards!
-            </Text>
+            <Text style={styles.footerText}>{t("findMatchingSymbol")}</Text>
           </View>
         </LinearGradient>
       </ImageBackground>

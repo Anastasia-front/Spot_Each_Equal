@@ -36,7 +36,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="game"
         options={{
-          title: "Game",
+          title: t("buttons.game"),
           tabBarIcon: ({ size, color }) => (
             <Gamepad2 size={size} color={color} />
           ),

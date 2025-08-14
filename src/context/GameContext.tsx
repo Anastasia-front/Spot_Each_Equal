@@ -2,7 +2,7 @@ import { generateCards } from "@/utils";
 import React, { createContext, ReactNode, useContext, useReducer } from "react";
 
 type SymbolData = {
-  icon: string; // or a component/type for the icon
+  icon: string;
   position: {
     x: number;
     y: number;
@@ -16,6 +16,7 @@ type Card = {
 
 type GameState = {
   cards: Card[];
+  cardsToMatch: number; // NEW — amount of cards to match at once
   gameMode: string | null;
   players: string[];
   gamePaused: boolean;
@@ -25,6 +26,7 @@ type GameState = {
 type Action =
   | { type: "SET_GAME_MODE"; payload: string }
   | { type: "SET_PLAYERS"; payload: string[] }
+  | { type: "SET_CARDS_TO_MATCH"; payload: number } // NEW action
   | { type: "START_GAME" }
   | { type: "MATCH_FOUND"; payload: { cards: Card[]; symbol: string } }
   | { type: "CLEAR_MATCH" }
@@ -34,6 +36,7 @@ type Action =
 
 const initialState: GameState = {
   cards: [],
+  cardsToMatch: 2, // default
   gameMode: null,
   players: [],
   gamePaused: false,
@@ -46,6 +49,8 @@ function gameReducer(state: GameState, action: Action): GameState {
       return { ...state, gameMode: action.payload };
     case "SET_PLAYERS":
       return { ...state, players: action.payload };
+    case "SET_CARDS_TO_MATCH": // NEW
+      return { ...state, cardsToMatch: action.payload };
     case "START_GAME":
       return {
         ...state,
@@ -54,12 +59,15 @@ function gameReducer(state: GameState, action: Action): GameState {
         gamePaused: false,
       };
     case "MATCH_FOUND":
-      // you could update scores or remove cards here
       return { ...state };
     case "CLEAR_MATCH":
       return { ...state };
     case "RESET_GAME":
-      return { ...initialState, cards: generateCards() };
+      return {
+        ...initialState,
+        cards: generateCards(),
+        cardsToMatch: state.cardsToMatch, // keep same amount
+      };
     case "PAUSE_GAME":
       return { ...state, gamePaused: true };
     case "RESUME_GAME":
