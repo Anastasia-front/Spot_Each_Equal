@@ -1,16 +1,5 @@
 import * as Icons from "@/assets/icons";
-
-type CardType = {
-  id: string;
-  symbols: string[];
-};
-
-export const findMatchingSymbol = (cardA: CardType, cardB: CardType): string | null => {
-  if (!cardA || !cardB) return null;
-  const match = cardA.symbols.find((symbol) => cardB.symbols.includes(symbol));
-  return match || null;
-};
-
+import { layoutIconsInHex } from "./iconsLayout";
 
 type SymbolData = {
   icon: string; // or actual imported icon type
@@ -26,17 +15,25 @@ type Card = {
 const SYMBOLS_PER_CARD = 8;
 
 // Helper: generate Spot It deck
-function generateSpotItDeck(symbols: string[], symbolsPerCard: number): string[][] {
+function generateSpotItDeck(
+  symbols: string[],
+  symbolsPerCard: number
+): string[][] {
   const n = symbolsPerCard - 1;
   const totalSymbolsNeeded = n * n + n + 1;
   if (symbols.length < totalSymbolsNeeded) {
-    throw new Error(`Need at least ${totalSymbolsNeeded} symbols to build a deck with ${symbolsPerCard} per card`);
+    throw new Error(
+      `Need at least ${totalSymbolsNeeded} symbols to build a deck with ${symbolsPerCard} per card`
+    );
   }
 
   const deck: string[][] = [];
 
   // First card
-  const firstCard = Array.from({ length: symbolsPerCard }, (_, i) => symbols[i]);
+  const firstCard = Array.from(
+    { length: symbolsPerCard },
+    (_, i) => symbols[i]
+  );
   deck.push(firstCard);
 
   // n cards starting with first symbol
@@ -63,18 +60,43 @@ function generateSpotItDeck(symbols: string[], symbolsPerCard: number): string[]
   return deck;
 }
 
-export function generateCards(): Card[] {
-  const allIcons = Object.keys(Icons); // ["icon1", "icon2", ...]
+export const generateCards = (count?: number): Card[] => {
+  const allIcons = Object.keys(Icons);
   const deckSymbolSets = generateSpotItDeck(allIcons, SYMBOLS_PER_CARD);
 
-  return deckSymbolSets.map((symbolSet, cardIndex) => ({
-    id: `card-${cardIndex}`,
-    symbols: symbolSet.map(iconName => ({
-      icon: iconName,
-      position: {
-        x: Math.random(), // 0 to 1 relative position
-        y: Math.random()
-      }
-    }))
-  }));
-}
+  const selectedSets = count
+    ? deckSymbolSets.slice(0, Math.min(count, deckSymbolSets.length))
+    : deckSymbolSets;
+
+  return selectedSets.map((symbolSet, cardIndex) => {
+    const positions = layoutIconsInHex(symbolSet.length, {
+      safeRadius: 0.9,     // stay well inside the hex
+      jitter: 0.03,         // tiny randomness
+      minSeparation: 0.9,  // increase if icons overlap
+      iterations: 10,
+    });
+
+    return {
+      id: `card-${cardIndex}`,
+      symbols: symbolSet.map((iconName, i) => ({
+        // If your HexagonCard interprets 'size' as px, keep it modest.
+        // If it's "relative", use something like 0.18 and multiply inside the component.
+        size: 150,
+        icon: iconName,
+        position: positions[i], // <- centered, normalized coords
+        rotation: (Math.random() * 2 - 1) * Math.PI, // -π..π
+      })),
+    };
+  });
+};
+
+export const getCardSize = (numCards: number, screenWidth: number) =>
+  Math.max(screenWidth / (numCards + 1), 160); // never smaller than 80px
+
+
+export const getCardPosition = (index: number, totalCards: number, radius: number, centerX: number, centerY: number) => {
+  const angle = (index / totalCards) * 2 * Math.PI; // divide circle evenly
+  const x = centerX + radius * Math.cos(angle) - radius / 2; // adjust by half card width
+  const y = centerY + radius * Math.sin(angle) - radius / 2; // adjust by half card height
+  return { x, y };
+};
