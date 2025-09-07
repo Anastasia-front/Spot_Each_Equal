@@ -2,7 +2,7 @@ import { generateCards } from "@/utils";
 import React, { createContext, ReactNode, useContext, useReducer } from "react";
 
 type SymbolData = {
-  icon: string; // or a component/type for the icon
+  icon: string;
   position: {
     x: number;
     y: number;
@@ -16,8 +16,10 @@ type Card = {
 
 type GameState = {
   cards: Card[];
+  cardsToMatch: number;
   gameMode: string | null;
   players: string[];
+  numPlayers: number;
   gamePaused: boolean;
   gameOver: boolean;
 };
@@ -25,6 +27,8 @@ type GameState = {
 type Action =
   | { type: "SET_GAME_MODE"; payload: string }
   | { type: "SET_PLAYERS"; payload: string[] }
+  | { type: "SET_NUM_PLAYERS"; payload: number }
+  | { type: "SET_CARDS_TO_MATCH"; payload: number }
   | { type: "START_GAME" }
   | { type: "MATCH_FOUND"; payload: { cards: Card[]; symbol: string } }
   | { type: "CLEAR_MATCH" }
@@ -34,8 +38,10 @@ type Action =
 
 const initialState: GameState = {
   cards: [],
+  cardsToMatch: 2,
   gameMode: null,
   players: [],
+  numPlayers: 2,
   gamePaused: false,
   gameOver: false,
 };
@@ -43,9 +49,39 @@ const initialState: GameState = {
 function gameReducer(state: GameState, action: Action): GameState {
   switch (action.type) {
     case "SET_GAME_MODE":
-      return { ...state, gameMode: action.payload };
+      let cards;
+      switch (action.payload) {
+        case "me":
+        case "you":
+          cards = generateCards(state.numPlayers);
+          return {
+            ...state,
+            cardsToMatch: state.players.length,
+            gameMode: action.payload,
+          };
+        case "memo":
+          cards = generateCards(state.numPlayers * 2);
+          return {
+            ...state,
+            cardsToMatch: state.players.length,
+            gameMode: action.payload,
+          };
+        case "duel":
+          cards = generateCards(state.numPlayers);
+          return { ...state, cardsToMatch: 2, gameMode: action.payload };
+        case "smallPile":
+          cards = generateCards(55);
+          return { ...state, cardsToMatch: 55, gameMode: action.payload };
+        default:
+          cards = generateCards(2);
+          return { ...state, gameMode: action.payload };
+      }
+    case "SET_NUM_PLAYERS":
+      return { ...state, numPlayers: action.payload };
     case "SET_PLAYERS":
       return { ...state, players: action.payload };
+    case "SET_CARDS_TO_MATCH":
+      return { ...state, cardsToMatch: action.payload };
     case "START_GAME":
       return {
         ...state,
@@ -54,12 +90,15 @@ function gameReducer(state: GameState, action: Action): GameState {
         gamePaused: false,
       };
     case "MATCH_FOUND":
-      // you could update scores or remove cards here
       return { ...state };
     case "CLEAR_MATCH":
       return { ...state };
     case "RESET_GAME":
-      return { ...initialState, cards: generateCards() };
+      return {
+        ...initialState,
+        cards: generateCards(),
+        cardsToMatch: state.cardsToMatch,
+      };
     case "PAUSE_GAME":
       return { ...state, gamePaused: true };
     case "RESUME_GAME":
