@@ -1,9 +1,12 @@
 import { getGameModes } from "@/constants";
+import { useGame } from "@/context";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ImageBackground,
+  Modal,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -16,10 +19,33 @@ const HomeScreen = () => {
   const { t } = useTranslation();
   const gameModes = getGameModes(t);
 
-  const handleGameModeSelect = (gameMode: any) => {
+  const { state, dispatch } = useGame();
+
+  const [showPlayerModal, setShowPlayerModal] = useState(false);
+  const [pendingMode, setPendingMode] = useState<any>(null);
+  const [selectedPlayers, setSelectedPlayers] = useState<number | 2>(2);
+
+  const handleGameModeSelect = (mode: any) => {
+    setPendingMode(mode);
+    setShowPlayerModal(true);
+  };
+
+  const handlePlayersSelect = (numPlayers: number) => {
+    setSelectedPlayers(numPlayers);
+  };
+
+  const handleConfirm = () => {
+    if (selectedPlayers) {
+      dispatch({ type: "SET_NUM_PLAYERS", payload: selectedPlayers });
+      setShowPlayerModal(false);
+    }
+
     router.push({
       pathname: "/(tabs)/game",
-      params: { gameMode: gameMode.key },
+      params: {
+        gameMode: pendingMode.key,
+        numPlayers: String(selectedPlayers),
+      },
     });
   };
 
@@ -84,26 +110,60 @@ const HomeScreen = () => {
           </ScrollView>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>
-              Find the matching symbol between any two cards!
-            </Text>
+            <Text style={styles.footerText}>{t("findMatchingSymbol")}</Text>
           </View>
         </LinearGradient>
       </ImageBackground>
+
+      {/* Player selection modal */}
+      <Modal visible={showPlayerModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>{t("selectPlayers")}</Text>
+
+            <View style={styles.playerOptions}>
+              {Array.from({ length: 8 }, (_, i) => i + 1).map((n) => (
+                <TouchableOpacity
+                  key={n}
+                  style={[
+                    styles.playerButton,
+                    selectedPlayers === n && styles.selectedPlayerButton,
+                  ]}
+                  onPress={() => handlePlayersSelect(n)}
+                >
+                  <Text
+                    style={[
+                      styles.playerButtonText,
+                      selectedPlayers === n && styles.selectedPlayerText,
+                    ]}
+                  >
+                    {n}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.confirmButton,
+                !selectedPlayers && { opacity: 0.5 },
+              ]}
+              disabled={!selectedPlayers}
+              onPress={handleConfirm}
+            >
+              <Text style={styles.confirmButtonText}>{t("buttons.continue")}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  backgroundImage: {
-    flex: 1,
-  },
-  background: {
-    flex: 1,
-  },
+  container: { flex: 1 },
+  backgroundImage: { flex: 1 },
+  background: { flex: 1 },
   header: {
     alignItems: "center",
     paddingTop: 40,
@@ -114,73 +174,38 @@ const styles = StyleSheet.create({
     fontSize: 36,
     fontFamily: "Inter-Bold",
     color: "#FFFFFF",
-    textAlign: "center",
     marginBottom: 12,
-    textShadowColor: "rgba(0, 0, 0, 0.3)",
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
   },
   subtitle: {
     fontSize: 18,
     fontFamily: "Inter-Regular",
     color: "#FFFFFF",
     opacity: 0.9,
-    textAlign: "center",
   },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  gameModeCard: {
-    marginBottom: 16,
-    borderRadius: 20,
-    elevation: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-  },
-  cardGradient: {
-    borderRadius: 20,
-    padding: 24,
-  },
-  cardContent: {
-    flex: 1,
-  },
+  scrollView: { flex: 1 },
+  scrollContent: { paddingHorizontal: 20, paddingBottom: 20 },
+  gameModeCard: { marginBottom: 16, borderRadius: 20 },
+  cardGradient: { borderRadius: 20, padding: 24 },
+  cardContent: { flex: 1 },
   cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
     marginBottom: 16,
   },
-  titleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-  },
+  titleRow: { flexDirection: "row", alignItems: "center", flex: 1 },
   cardTitle: {
     fontSize: 26,
     fontFamily: "Inter-Bold",
     color: "#FFFFFF",
     marginLeft: 12,
-    textShadowColor: "rgba(0, 0, 0, 0.3)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
   },
   playersTag: {
     backgroundColor: "rgba(255, 255, 255, 0.3)",
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingTop: 10,
     borderRadius: 16,
   },
-  playersText: {
-    fontSize: 12,
-    fontFamily: "Inter-SemiBold",
-    color: "#FFFFFF",
-  },
+  playersText: { fontSize: 12, fontFamily: "Inter-SemiBold", color: "#FFFFFF" },
   cardDescription: {
     fontSize: 15,
     fontFamily: "Inter-Regular",
@@ -188,16 +213,69 @@ const styles = StyleSheet.create({
     opacity: 0.95,
     lineHeight: 22,
   },
-  footer: {
-    padding: 20,
-    alignItems: "center",
-  },
+  footer: { padding: 20, alignItems: "center" },
   footerText: {
     color: "#FFFFFF",
     fontSize: 16,
     fontFamily: "Inter-Regular",
     opacity: 0.8,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "#FFF",
+    padding: 24,
+    borderRadius: 20,
+    width: "85%",
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontFamily: "Inter-Bold",
+    marginBottom: 20,
     textAlign: "center",
+  },
+  playerOptions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: 12,
+  },
+  playerButton: {
+    backgroundColor: "#667eea",
+    width: 56,
+    height: 56,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    margin: 6,
+  },
+  selectedPlayerButton: {
+    backgroundColor: "#764ba2",
+  },
+  playerButtonText: {
+    color: "#FFF",
+    fontSize: 18,
+    fontFamily: "Inter-Bold",
+  },
+  selectedPlayerText: {
+    color: "#FFD700",
+  },
+  confirmButton: {
+    backgroundColor: "#4CAF50",
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 12,
+    marginTop: 20,
+  },
+  confirmButtonText: {
+    color: "#FFF",
+    fontSize: 18,
+    fontFamily: "Inter-Bold",
   },
 });
 

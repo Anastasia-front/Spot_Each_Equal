@@ -1,6 +1,6 @@
 import HexagonCard from "@/components/HexagonCard";
 import { useGame } from "@/context/GameContext";
-import { findMatchingSymbol } from "@/utils";
+import { findCommonSymbol, getCardPosition, getCardSize } from "@/utils";
 import { router, useLocalSearchParams } from "expo-router";
 import { ArrowLeft, Pause, Play, RotateCcw } from "lucide-react-native";
 import { useEffect, useState } from "react";
@@ -23,7 +23,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
-const { width: screenWidth } = Dimensions.get("window");
+const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
 const GameScreen = () => {
   const { t } = useTranslation();
@@ -34,6 +34,9 @@ const GameScreen = () => {
   const [selectedCards, setSelectedCards] = useState<any[]>([]);
   const [showMatch, setShowMatch] = useState(false);
   const [matchedSymbol, setMatchedSymbol] = useState<string | null>(null);
+
+  // Configurable number of cards to match — default to 2
+  const cardsToMatch = state.numPlayers || 2;
 
   // Animation values
   const matchScale = useSharedValue(0);
@@ -49,7 +52,6 @@ const GameScreen = () => {
 
   const triggerHapticFeedback = () => {
     if (Platform.OS !== "web") {
-      // Would use Haptics here on native platforms
       console.log("Haptic feedback triggered");
     }
   };
@@ -59,27 +61,29 @@ const GameScreen = () => {
 
     triggerHapticFeedback();
 
-    if (selectedCards.length === 0) {
-      setSelectedCards([card]);
-    } else if (selectedCards.length === 1) {
-      const firstCard = selectedCards[0];
-      const matchingSymbol = findMatchingSymbol(firstCard, card);
+    const alreadySelected = selectedCards.some((c) => c.id === card.id);
+    if (alreadySelected) return;
+
+    const newSelection = [...selectedCards, card];
+    setSelectedCards(newSelection);
+
+    // Check if we have enough cards selected
+    if (newSelection.length === cardsToMatch) {
+      const allSymbols = newSelection.map((c) => c.symbols);
+      const matchingSymbol = findCommonSymbol(allSymbols);
 
       if (matchingSymbol) {
         // Match found!
         setMatchedSymbol(matchingSymbol);
         setShowMatch(true);
-        setSelectedCards([firstCard, card]);
 
-        // Animate match notification
         matchScale.value = withSequence(withSpring(1.2), withSpring(1));
 
         dispatch({
           type: "MATCH_FOUND",
-          payload: { cards: [firstCard, card], symbol: matchingSymbol },
+          payload: { cards: newSelection, symbol: matchingSymbol },
         });
 
-        // Clear match after 2 seconds
         setTimeout(() => {
           setShowMatch(false);
           setSelectedCards([]);
@@ -88,17 +92,17 @@ const GameScreen = () => {
           dispatch({ type: "CLEAR_MATCH" });
         }, 2000);
       } else {
-        // No match - shake animation
+        // No match — shake
         cardShake.value = withSequence(
           withTiming(10, { duration: 50 }),
           withTiming(-10, { duration: 50 }),
           withTiming(10, { duration: 50 }),
           withTiming(0, { duration: 50 })
         );
+
+        // Reset to only last clicked card to try again
         setSelectedCards([card]);
       }
-    } else {
-      setSelectedCards([card]);
     }
   };
 
@@ -123,24 +127,20 @@ const GameScreen = () => {
     }
   };
 
-  const matchAnimatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ scale: matchScale.value }],
-      opacity: matchScale.value,
-    };
-  });
+  const matchAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: matchScale.value }],
+    opacity: matchScale.value,
+  }));
 
-  const cardShakeStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateX: cardShake.value }],
-    };
-  });
+  const cardShakeStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: cardShake.value }],
+  }));
 
   if (!state.cards.length) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading game...</Text>
+          <Text style={styles.loadingText}>{t("loading")}</Text>
         </View>
       </SafeAreaView>
     );
@@ -148,6 +148,7 @@ const GameScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.headerButton}
@@ -177,16 +178,20 @@ const GameScreen = () => {
         </View>
       </View>
 
+      {/* Match notification */}
       {showMatch && (
         <Animated.View style={[styles.matchNotification, matchAnimatedStyle]}>
           <Text style={styles.matchText}>{t("foundMatch")}</Text>
-          <Text style={styles.matchSymbol}>Symbol: {matchedSymbol}</Text>
+          <Text style={styles.matchSymbol}>
+            {t("symbolLabel")}: {matchedSymbol}
+          </Text>
         </Animated.View>
       )}
 
+      {/* Pause overlay */}
       {state.gamePaused && (
         <View style={styles.pauseOverlay}>
-          <Text style={styles.pauseText}>Game Paused</Text>
+          <Text style={styles.pauseText}>{t("gamePaused")}</Text>
           <TouchableOpacity
             style={styles.resumeButton}
             onPress={handlePauseToggle}
@@ -197,29 +202,44 @@ const GameScreen = () => {
         </View>
       )}
 
+      {/* Game area */}
       <ScrollView
         style={styles.gameArea}
         contentContainerStyle={styles.gameContent}
       >
         <Animated.View style={[styles.cardsGrid, cardShakeStyle]}>
-          {state.cards.slice(0, 6).map((card: any) => (
-            <HexagonCard
-              key={card.id}
-              card={card}
-              size={screenWidth * 0.35}
-              onPress={() => handleCardPress(card)}
-              highlighted={selectedCards.some(
-                (selected) => selected.id === card.id
-              )}
-              disabled={state.gamePaused}
-            />
-          ))}
+          {state.cards.slice(0, cardsToMatch).map((card: any, index) => {
+            const visibleCards = cardsToMatch; // number of cards on the field
+
+            const { x, y } = getCardPosition(
+              index,
+              visibleCards,
+              200,
+              screenWidth / 2,
+              screenHeight / 2
+            );
+
+            return (
+              <HexagonCard
+                key={card.id}
+                card={card}
+                size={getCardSize(visibleCards, screenWidth * 2)}
+                style={{ position: "absolute", left: x, top: y }}
+                onPress={() => handleCardPress(card)}
+                highlighted={selectedCards.some(
+                  (selected) => selected.id === card.id
+                )}
+                disabled={state.gamePaused}
+              />
+            );
+          })}
         </Animated.View>
       </ScrollView>
 
+      {/* Instructions */}
       <View style={styles.instructions}>
         <Text style={styles.instructionsText}>
-          Tap two cards to find the matching symbol between them!
+          {t("instructions.findSymbol", { count: cardsToMatch })}
         </Text>
       </View>
     </SafeAreaView>
@@ -246,7 +266,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 20,
-    paddingVertical: 15,
+    paddingTop: 50,
+    paddingBottom: 15,
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
     borderBottomColor: "#E1E8ED",

@@ -13,9 +13,10 @@ export default function TabLayout() {
           backgroundColor: "#FFFFFF",
           borderTopWidth: 1,
           borderTopColor: "#E1E8ED",
-          paddingBottom: 8,
-          paddingTop: 8,
-          height: 70,
+          paddingBottom: 10,
+          paddingTop: 10,
+          marginTop: 10,
+          height: 100,
         },
         tabBarActiveTintColor: "#667eea",
         tabBarInactiveTintColor: "#8E8E93",
@@ -36,7 +37,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="game"
         options={{
-          title: "Game",
+          title: t("buttons.game"),
           tabBarIcon: ({ size, color }) => (
             <Gamepad2 size={size} color={color} />
           ),
