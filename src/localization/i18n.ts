@@ -35,13 +35,14 @@ const resources = {
         smallPile: "Small pile",
       },
       gameModeDescriptions: {
-        me: "A mode where all cards with matching items you find are taken by you. The winner is the one with the most points.",
-        you: "Challenge other players in timed rounds. When you find a match on a card with an opponent, the card is given to them. The winner is the one with the fewest points.",
-        memo: "Test your memory. With one card in hand, remember all its items and find matching ones on new cards from the deck. The winner is the one with the most points.",
+        me: "Each player has one card, with the deck face up in the center. Find the shared symbol with the center card first, take that card, and score the most cards.",
+        you: "Find a match between the center card and an opponent's card, then give the center card to that opponent. The player with the fewest cards wins.",
+        memo: "Memorize the symbols on your card, then find matching symbols from memory as new cards appear. Correct answers score points.",
         reset:
-          "Restart and shuffle the cards. In the discard pile, all cards are face up, and you must quickly find pairs on any cards. The winner is the one with the most points.",
-        duel: "Play against a single opponent.",
-        smallPile: "Play with fewer cards for quicker rounds.",
+          "All cards are dealt to players. Race to find the shared symbol with the central discard pile and get rid of your cards first.",
+        duel: "Two players try to win every card from the opponent by spotting matches faster.",
+        smallPile:
+          "Scatter the cards on the table and race to collect matching pairs. Shadow and special-symbol cards can add extra challenges later.",
       },
       aboutTitle: "About",
       aboutDescription:
@@ -90,13 +91,14 @@ const resources = {
         smallPile: "Petit tas",
       },
       gameModeDescriptions: {
-        me: "Un mode où toutes les cartes avec des éléments identiques que vous trouvez sont prises par vous. Le gagnant est celui avec le plus de points.",
-        you: "Défiez d'autres joueurs dans des manches chronométrées. Lorsque vous trouvez une correspondance sur une carte avec un adversaire, la carte lui est donnée. Le gagnant est celui avec le moins de points.",
-        memo: "Testez votre mémoire. Avec une carte en main, mémorisez tous ses éléments et trouvez-en les correspondants sur de nouvelles cartes du paquet. Le gagnant est celui avec le plus de points.",
+        me: "Chaque joueur a une carte et le paquet est visible au centre. Trouvez le symbole commun avec la carte centrale, prenez cette carte et marquez le plus de cartes.",
+        you: "Trouvez une correspondance entre la carte centrale et la carte d'un adversaire, puis donnez-lui cette carte. Le joueur avec le moins de cartes gagne.",
+        memo: "Mémorisez les symboles de votre carte, puis trouvez de mémoire les symboles communs sur les nouvelles cartes. Les bonnes réponses rapportent des points.",
         reset:
-          "Redémarrez et mélangez les cartes. Dans la pile de défausse, toutes les cartes sont face visible et vous devez rapidement trouver des paires sur n'importe quelles cartes. Le gagnant est celui avec le plus de points.",
-        duel: "Affrontez un seul adversaire.",
-        smallPile: "Jouez avec moins de cartes pour des manches plus rapides.",
+          "Toutes les cartes sont distribuées aux joueurs. Trouvez vite le symbole commun avec la défausse centrale pour vous débarrasser de vos cartes en premier.",
+        duel: "Deux joueurs essaient de prendre toutes les cartes de l'adversaire en repérant les correspondances plus vite.",
+        smallPile:
+          "Éparpillez les cartes sur la table et récupérez les paires le plus vite possible. Les cartes ombres et symboles spéciaux pourront ajouter des défis.",
       },
       aboutTitle: "À propos",
       aboutDescription:
@@ -146,13 +148,14 @@ const resources = {
         smallPile: "Маленька колода",
       },
       gameModeDescriptions: {
-        me: "Режим гри, зосереджений на тому що всі карти, на яких тобою було знайдено схожі предмети, ти забираєш собі. Переможець той, у кого більше балів.",
-        you: "Кидай виклик іншим гравцям у раундах на час. Коли знаходиш спільний предмет на картці із суперником, карта зараховується йому. Переможець той, у кого менше балів.",
-        memo: "Перевір свої навички пам’яті. Треба, маючи одну карту, запамʼятати всі предмети на ній та знаходити схожі предмети на нових картах з колоди. Переможець той, у кого більше балів.",
+        me: "Кожен гравець має одну карту, а колода лежить у центрі горілиць. Першим знайди спільний символ із центральною картою, забери її й набери найбільше карт.",
+        you: "Знайди збіг між центральною картою та картою суперника, після чого віддай центральну карту йому. Перемагає той, у кого найменше карт.",
+        memo: "Запамʼятай символи на своїй карті, а потім по памʼяті знаходь збіги на нових картах. Правильні відповіді дають бали.",
         reset:
-          "Перезапусти та перетасуй карти. У зносі всі карти розкриті й треба якомога швидше знаходити пари на будь-яких картках. Переможець той, у кого більше балів.",
-        duel: "Зіграйте проти одного суперника.",
-        smallPile: "Грай з меншою кількістю карт для швидких раундів.",
+          "Усі карти роздаються гравцям. Швидко знаходь спільний символ із центральним скидом і першим позбудься своїх карт.",
+        duel: "Два гравці намагаються забрати всі карти суперника, швидше знаходячи збіги.",
+        smallPile:
+          "Карти розсипаються на столі, а гравці наввипередки збирають пари. Карти-тіні та спеціальні символи можна додати як ускладнення.",
       },
       aboutTitle: "Про гру",
       aboutDescription:

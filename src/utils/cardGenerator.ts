@@ -2,8 +2,10 @@ import * as Icons from "@/assets/icons";
 import { layoutIconsInHex } from "./iconsLayout";
 
 type SymbolData = {
-  icon: string; // or actual imported icon type
+  icon: string;
   position: { x: number; y: number };
+  rotation: number;
+  size: number;
 };
 
 type Card = {
@@ -17,13 +19,13 @@ const SYMBOLS_PER_CARD = 8;
 // Helper: generate Spot It deck
 function generateSpotItDeck(
   symbols: string[],
-  symbolsPerCard: number
+  symbolsPerCard: number,
 ): string[][] {
   const n = symbolsPerCard - 1;
   const totalSymbolsNeeded = n * n + n + 1;
   if (symbols.length < totalSymbolsNeeded) {
     throw new Error(
-      `Need at least ${totalSymbolsNeeded} symbols to build a deck with ${symbolsPerCard} per card`
+      `Need at least ${totalSymbolsNeeded} symbols to build a deck with ${symbolsPerCard} per card`,
     );
   }
 
@@ -32,7 +34,7 @@ function generateSpotItDeck(
   // First card
   const firstCard = Array.from(
     { length: symbolsPerCard },
-    (_, i) => symbols[i]
+    (_, i) => symbols[i],
   );
   deck.push(firstCard);
 
@@ -70,31 +72,34 @@ export const generateCards = (count?: number): Card[] => {
 
   return selectedSets.map((symbolSet, cardIndex) => {
     const positions = layoutIconsInHex(symbolSet.length, {
-      safeRadius: 0.9,     // stay well inside the hex
-      jitter: 0.03,         // tiny randomness
-      minSeparation: 0.9,  // increase if icons overlap
+      safeRadius: 0.92,
+      jitter: 0.04,
+      minSeparation: 0.55,
       iterations: 10,
     });
 
     return {
       id: `card-${cardIndex}`,
       symbols: symbolSet.map((iconName, i) => ({
-        // If your HexagonCard interprets 'size' as px, keep it modest.
-        // If it's "relative", use something like 0.18 and multiply inside the component.
-        size: 150,
         icon: iconName,
-        position: positions[i], // <- centered, normalized coords
-        rotation: (Math.random() * 2 - 1) * Math.PI, // -π..π
+        position: positions[i],
+        rotation: Math.round((Math.random() * 2 - 1) * 38),
+        size: 0.15 + Math.random() * 0.12,
       })),
     };
   });
 };
 
 export const getCardSize = (numCards: number, screenWidth: number) =>
-  Math.max(screenWidth / (numCards + 1), 160); // never smaller than 80px
+  Math.max(screenWidth / (numCards + 1), 160);
 
-
-export const getCardPosition = (index: number, totalCards: number, radius: number, centerX: number, centerY: number) => {
+export const getCardPosition = (
+  index: number,
+  totalCards: number,
+  radius: number,
+  centerX: number,
+  centerY: number,
+) => {
   const angle = (index / totalCards) * 2 * Math.PI; // divide circle evenly
   const x = centerX + radius * Math.cos(angle) - radius / 2; // adjust by half card width
   const y = centerY + radius * Math.sin(angle) - radius / 2; // adjust by half card height

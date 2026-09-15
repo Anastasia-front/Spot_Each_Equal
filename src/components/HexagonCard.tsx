@@ -7,7 +7,7 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
-import Svg, { G, Polygon } from "react-native-svg";
+import Svg, { Defs, G, Path, ClipPath } from "react-native-svg";
 
 import * as Icons from "@/assets/icons";
 
@@ -33,8 +33,9 @@ const HexagonCard: React.FC<HexagonCardProps> = ({
   onPress,
   highlighted = false,
   disabled = false,
+  style,
 }) => {
-  const hexagonPoints = getHexagonPoints(size);
+  const hexagonPath = getRoundedHexagonPath(size);
   const centerX = size / 2;
   const centerY = size / 2;
 
@@ -69,79 +70,103 @@ const HexagonCard: React.FC<HexagonCardProps> = ({
           height: size,
           margin: 10,
         },
+        style,
         animatedStyle,
       ]}
     >
-      <Svg width={size} height={size}>
+      <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        <Defs>
+          <ClipPath id={`card-clip-${card.id}`}>
+            <Path d={hexagonPath} />
+          </ClipPath>
+        </Defs>
+
         {/* Hexagon shadow */}
-        <Polygon
-          points={hexagonPoints}
+        <Path
+          d={hexagonPath}
           fill="#00000015"
-          transform={`translate(3, 3)`}
+          transform="translate(3 4)"
         />
 
         {/* Hexagon background */}
-        <Polygon
-          points={hexagonPoints}
-          fill={card.isColorCard ? "#FFFFFF" : "#F8F9FA"}
-          stroke={highlighted ? "#FF6B6B" : "#E1E8ED"}
-          strokeWidth={highlighted ? 4 : 2}
+        <Path
+          d={hexagonPath}
+          fill={card.isColorCard === false ? "#F6F7F5" : "#FFFDF8"}
+          stroke={highlighted ? "#FF6B6B" : "#D5D1C8"}
+          strokeWidth={highlighted ? 4 : 1.5}
           opacity={disabled ? 0.6 : 1}
         />
 
         {/* Highlighted glow effect */}
         {highlighted && (
-          <Polygon
-            points={hexagonPoints}
+          <Path
+            d={hexagonPath}
             fill="none"
             stroke="#FF6B6B40"
             strokeWidth={8}
           />
         )}
 
-     {/* Render symbols */}
-<G>
-  {card.symbols.map((symbol: any, index: number) => {
-    const radius = size * 0.5; // half the hex width
-    const iconSize = size * 0.25; // scale factor: 20% of hex size
+        {/* Render symbols */}
+        <G clipPath={`url(#card-clip-${card.id})`}>
+          {card.symbols.map((symbol: any, index: number) => {
+            const radius = size * 0.5;
+            const iconSize = size * (symbol.size ?? 0.2);
 
-    const x = centerX + symbol.position.x * (radius * 0.7);
-    const y = centerY + symbol.position.y * (radius * 0.7);
+            const x = centerX + symbol.position.x * (radius * 0.72);
+            const y = centerY + symbol.position.y * (radius * 0.72);
 
-    return (
-      <G
-        key={index}
-        transform={`translate(${x - iconSize / 2}, ${y - iconSize / 2})`}
-      >
-        <IconRenderer
-          icon={Icons[symbol.icon as keyof typeof Icons]}
-          color={symbol.color}
-          size={iconSize} // ✅ scaled to hex size
-          rotation={symbol.rotation}
-        />
-      </G>
-    );
-  })}
-</G>
+            return (
+              <G
+                key={index}
+                transform={`translate(${x}, ${y}) rotate(${symbol.rotation ?? 0}) translate(${-iconSize / 2}, ${-iconSize / 2})`}
+              >
+                <IconRenderer
+                  icon={Icons[symbol.icon as keyof typeof Icons]}
+                  color={symbol.color}
+                  size={iconSize}
+                />
+              </G>
+            );
+          })}
+        </G>
       </Svg>
     </AnimatedTouchableOpacity>
   );
 };
 
-function getHexagonPoints(size: number): string {
-  const centerX = size / 2;
-  const centerY = size / 2;
-  const radius = size * 0.5;
-  const points = [];
+function getRoundedHexagonPath(size: number): string {
+  const inset = size * 0.06;
+  const radius = size * 0.5 - inset;
+  const cornerRadius = size * 0.035;
+  const center = size / 2;
+  const points = Array.from({ length: 6 }, (_, i) => {
+    const angle = (i * 60) * (Math.PI / 180);
+    return {
+      x: center + radius * Math.cos(angle),
+      y: center + radius * Math.sin(angle),
+    };
+  });
 
-  for (let i = 0; i < 6; i++) {
-    const angle = (i * 60 - 90) * (Math.PI / 180);
-    const x = centerX + radius * Math.cos(angle);
-    const y = centerY + radius * Math.sin(angle);
-    points.push(`${x},${y}`);
-  }
+  return points
+    .map((point, index) => {
+      const previous = points[(index + points.length - 1) % points.length];
+      const next = points[(index + 1) % points.length];
+      const previousAngle = Math.atan2(previous.y - point.y, previous.x - point.x);
+      const nextAngle = Math.atan2(next.y - point.y, next.x - point.x);
+      const start = {
+        x: point.x + Math.cos(previousAngle) * cornerRadius,
+        y: point.y + Math.sin(previousAngle) * cornerRadius,
+      };
+      const end = {
+        x: point.x + Math.cos(nextAngle) * cornerRadius,
+        y: point.y + Math.sin(nextAngle) * cornerRadius,
+      };
 
-  return points.join(" ");
+      return `${index === 0 ? "M" : "L"} ${start.x} ${start.y} Q ${point.x} ${point.y} ${end.x} ${end.y}`;
+    })
+    .join(" ")
+    .concat(" Z");
 }
 
 export default HexagonCard;

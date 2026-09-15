@@ -22,7 +22,7 @@ export const getGameModes = (t: (key: string) => string): GameMode[] => [
     title: t("gameModes.me"),
     description: t("gameModeDescriptions.me"),
     color: ["#DDA0DD", "#e6b3b3ff"],
-    players: "2-5",
+    players: "2-8",
     icon: Users,
   },
   {
@@ -30,7 +30,7 @@ export const getGameModes = (t: (key: string) => string): GameMode[] => [
     title: t("gameModes.you"),
     description: t("gameModeDescriptions.you"),
     color: ["#4ECDC4", "#6ed589ff"],
-    players: "2-6",
+    players: "2-8",
     icon: Clock,
   },
   {
@@ -38,7 +38,7 @@ export const getGameModes = (t: (key: string) => string): GameMode[] => [
     title: t("gameModes.memo"),
     description: t("gameModeDescriptions.memo"),
     color: ["#ffc38eff", "#ffd78eff"],
-    players: "2-4",
+    players: "2-8",
     icon: Brain,
   },
   {
@@ -46,7 +46,7 @@ export const getGameModes = (t: (key: string) => string): GameMode[] => [
     title: t("gameModes.reset"),
     description: t("gameModeDescriptions.reset"),
     color: ["#b396ceff", "#fedfffff"],
-    players: "2-6",
+    players: "2-8",
     icon: RotateCcw,
   },
   {

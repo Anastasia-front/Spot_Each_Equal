@@ -49,31 +49,27 @@ const initialState: GameState = {
 function gameReducer(state: GameState, action: Action): GameState {
   switch (action.type) {
     case "SET_GAME_MODE":
-      let cards;
       switch (action.payload) {
         case "me":
         case "you":
-          cards = generateCards(state.numPlayers);
           return {
             ...state,
-            cardsToMatch: state.players.length,
+            cardsToMatch: 2,
             gameMode: action.payload,
           };
         case "memo":
-          cards = generateCards(state.numPlayers * 2);
           return {
             ...state,
-            cardsToMatch: state.players.length,
+            cardsToMatch: 2,
             gameMode: action.payload,
           };
+        case "reset":
+          return { ...state, cardsToMatch: 2, gameMode: action.payload };
         case "duel":
-          cards = generateCards(state.numPlayers);
           return { ...state, cardsToMatch: 2, gameMode: action.payload };
         case "smallPile":
-          cards = generateCards(55);
-          return { ...state, cardsToMatch: 55, gameMode: action.payload };
+          return { ...state, cardsToMatch: 4, gameMode: action.payload };
         default:
-          cards = generateCards(2);
           return { ...state, gameMode: action.payload };
       }
     case "SET_NUM_PLAYERS":
@@ -85,7 +81,7 @@ function gameReducer(state: GameState, action: Action): GameState {
     case "START_GAME":
       return {
         ...state,
-        cards: generateCards(),
+        cards: generateCards(55),
         gameOver: false,
         gamePaused: false,
       };

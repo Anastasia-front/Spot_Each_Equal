@@ -35,8 +35,7 @@ const GameScreen = () => {
   const [showMatch, setShowMatch] = useState(false);
   const [matchedSymbol, setMatchedSymbol] = useState<string | null>(null);
 
-  // Configurable number of cards to match — default to 2
-  const cardsToMatch = state.numPlayers || 2;
+  const cardsToMatch = state.cardsToMatch || 2;
 
   // Animation values
   const matchScale = useSharedValue(0);
@@ -209,21 +208,21 @@ const GameScreen = () => {
       >
         <Animated.View style={[styles.cardsGrid, cardShakeStyle]}>
           {state.cards.slice(0, cardsToMatch).map((card: any, index) => {
-            const visibleCards = cardsToMatch; // number of cards on the field
+            const visibleCards = cardsToMatch;
 
             const { x, y } = getCardPosition(
               index,
               visibleCards,
-              200,
+              Math.min(screenWidth, screenHeight) * 0.23,
               screenWidth / 2,
-              screenHeight / 2
+              Math.min(screenHeight * 0.38, 330)
             );
 
             return (
               <HexagonCard
                 key={card.id}
                 card={card}
-                size={getCardSize(visibleCards, screenWidth * 2)}
+                size={getCardSize(visibleCards, screenWidth)}
                 style={{ position: "absolute", left: x, top: y }}
                 onPress={() => handleCardPress(card)}
                 highlighted={selectedCards.some(
@@ -349,12 +348,11 @@ const styles = StyleSheet.create({
   },
   gameContent: {
     padding: 20,
+    minHeight: screenHeight * 0.68,
   },
   cardsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-around",
-    alignItems: "center",
+    minHeight: screenHeight * 0.62,
+    position: "relative",
   },
   instructions: {
     backgroundColor: "#FFFFFF",
