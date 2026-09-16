@@ -2,6 +2,13 @@ import * as Localization from "expo-localization";
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 
+globalThis.Intl ??= {} as typeof Intl;
+
+require("@formatjs/intl-pluralrules/polyfill-force");
+require("@formatjs/intl-pluralrules/locale-data/en");
+require("@formatjs/intl-pluralrules/locale-data/fr");
+require("@formatjs/intl-pluralrules/locale-data/uk");
+
 const resources = {
   en: {
     translation: {
@@ -115,7 +122,7 @@ const resources = {
       language: "Langue",
     },
   },
-  ua: {
+  uk: {
     translation: {
       buttons: {
         play: "Грати",
@@ -175,11 +182,15 @@ const resources = {
 };
 
 const deviceLocale = Localization.getLocales()[0]?.languageCode || "en";
+const supportedLocale = ["en", "fr", "uk"].includes(deviceLocale)
+  ? deviceLocale
+  : "en";
 
 i18n.use(initReactI18next).init({
   resources,
-  lng: deviceLocale, // 'en', 'fr', 'ua'
+  lng: supportedLocale,
   fallbackLng: "en",
+  supportedLngs: ["en", "fr", "uk"],
   interpolation: {
     escapeValue: false,
   },
