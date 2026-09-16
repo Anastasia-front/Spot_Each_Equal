@@ -1,12 +1,15 @@
+import { gameStyles as styles } from "@/components/game/game.styles";
 import GameBoard from "@/components/game/GameBoard";
 import GameHeader from "@/components/game/GameHeader";
-import { gameStyles as styles } from "@/components/game/game.styles";
-import { MatchNotification, PauseOverlay } from "@/components/game/GameOverlays";
+import {
+  MatchNotification,
+  PauseOverlay,
+} from "@/components/game/GameOverlays";
 import { useGame } from "@/context/GameContext";
 import { useGameRound } from "@/hooks/useGameRound";
 import { useLocalSearchParams } from "expo-router";
-import { Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
+import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const GameScreen = () => {
@@ -23,7 +26,7 @@ const GameScreen = () => {
 
   if (!state.cards.length) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView edges={["top"]} style={styles.container}>
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>{t("loading")}</Text>
         </View>
@@ -32,7 +35,7 @@ const GameScreen = () => {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={["top"]} style={styles.safeArea}>
       <View style={styles.container}>
         <GameHeader
           backLabel={t("buttons.back")}
