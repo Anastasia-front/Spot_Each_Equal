@@ -23,9 +23,18 @@ A fast-paced game of attention and reaction. Players must find identical images 
   The most fun mode. All cards are spread on the table, and players simultaneously search for pairs to take.
 
 ### 🃏 Shadow Cards
+
 There are 10 black-and-white shadow cards that correspond to colored cards. Finding a shadow pair earns an extra point.
 
 ## ⚙️ Installation & Running
+
+## 📦 SDK & Runtime
+
+- Expo SDK: **57**
+- Expo package: `^57.0.0`
+- React Native: `0.86.3`
+- React: `19.2.3`
+- Recommended Node.js: `>=20.19.4`
 
 ```bash
 git clone <repo-url>
@@ -38,6 +47,7 @@ npm run web         # run in browser
 ```
 
 ## 🛠 Technologies Used
+
 - React Native + Expo
 - TypeScript
 - i18next (localization)
