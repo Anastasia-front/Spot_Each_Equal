@@ -1,83 +1,96 @@
-// import React from "react";
-// import { G, Mask, Rect, Image as SvgImage } from "react-native-svg";
 import * as Icons from "@/assets/icons";
+import {
+  Defs,
+  G,
+  Image as SvgImage,
+  Mask,
+  Rect,
+} from "react-native-svg";
 
 interface IconRendererProps {
   icon: (typeof Icons)[keyof typeof Icons];
   size: number;
-  rotation?: number;
-  color?: string; // for monochrome / tint overlay
+  color?: string;
+  outlineColor?: string;
+  outlineWidth?: number;
+  maskId?: string;
 }
 
-// const IconRenderer: React.FC<IconRendererProps> = ({
-//   icon,
-//   size,
-//   rotation = 0,
-//   color,
-// }) => {
-//   const halfSize = size / 2;
+const OUTLINE_OFFSETS = [
+  [-1, 0],
+  [1, 0],
+  [0, -1],
+  [0, 1],
+  [-0.7, -0.7],
+  [0.7, -0.7],
+  [-0.7, 0.7],
+  [0.7, 0.7],
+];
 
-//   if (!color) {
-//     return (
-//       <SvgImage
-//         href={icon}
-//         width={size}
-//         height={size}
-//         x={-halfSize}
-//         y={-halfSize}
-//         transform={`rotate(${rotation})`}
-//         preserveAspectRatio="xMidYMid meet"
-//       />
-//     );
-//   }
+const IconRenderer = ({
+  icon,
+  size,
+  outlineColor,
+  outlineWidth = 4,
+  maskId,
+}: IconRendererProps) => {
+  const shouldOutline = Boolean(outlineColor && maskId);
+  const outlineMasks = shouldOutline
+    ? OUTLINE_OFFSETS.map(([x, y], index) => ({
+        id: `${maskId}-${index}`,
+        x: x * outlineWidth,
+        y: y * outlineWidth,
+      }))
+    : [];
 
-//   // Apply monochrome tint overlay
-//   return (
-//     <G transform={`rotate(${rotation})`}>
-//       <Mask id="icon-mask">
-//         <SvgImage
-//           href={icon}
-//           width={size}
-//           height={size}
-//           x={-halfSize}
-//           y={-halfSize}
-//           preserveAspectRatio="xMidYMid meet"
-//         />
-//       </Mask>
-//       <Rect
-//         x={-halfSize}
-//         y={-halfSize}
-//         width={size}
-//         height={size}
-//         fill={color}
-//         mask="url(#icon-mask)"
-//       />
-//     </G>
-//   );
-// };
+  return (
+    <G>
+      {shouldOutline && (
+        <Defs>
+          {outlineMasks.map((mask) => (
+            <Mask
+              key={mask.id}
+              id={mask.id}
+              x={mask.x}
+              y={mask.y}
+              width={size}
+              height={size}
+              maskUnits="userSpaceOnUse"
+            >
+              <SvgImage
+                href={icon}
+                x={mask.x}
+                y={mask.y}
+                width={size}
+                height={size}
+                preserveAspectRatio="xMidYMid meet"
+              />
+            </Mask>
+          ))}
+        </Defs>
+      )}
 
-// export default IconRenderer;
+      {shouldOutline &&
+        outlineMasks.map((mask) => (
+          <Rect
+            key={mask.id}
+            x={mask.x}
+            y={mask.y}
+            width={size}
+            height={size}
+            fill={outlineColor}
+            mask={`url(#${mask.id})`}
+          />
+        ))}
 
-// import { Image } from "react-native";
-import { Image as SvgImage } from "react-native-svg";
-
-const IconRenderer = ({ icon, size, rotation = 0 }: IconRendererProps) => (
-  <SvgImage
-    href={icon} // important: use `href` for react-native-svg
-    width={size}
-    height={size}
-    transform={`rotate(${rotation})`}
-    preserveAspectRatio="xMidYMid meet"
-  />
-  // <Image
-  //   source={icon}
-  //   style={{
-  //     width: size,
-  //     height: size,
-  //     transform: [{ rotate: `${rotation}deg` }],
-  //   }}
-  //   resizeMode="contain"
-  // />
-);
+      <SvgImage
+        href={icon}
+        width={size}
+        height={size}
+        preserveAspectRatio="xMidYMid meet"
+      />
+    </G>
+  );
+};
 
 export default IconRenderer;
