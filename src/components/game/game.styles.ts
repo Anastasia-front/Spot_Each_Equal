@@ -58,10 +58,15 @@ export const gameStyles = StyleSheet.create({
     color: "#2C3E50",
   },
   matchNotification: {
+    position: "absolute",
+    top: 55,
+    left: 0,
+    right: 0,
     backgroundColor: "#4ECDC4",
     paddingVertical: 15,
     paddingHorizontal: 20,
     alignItems: "center",
+    zIndex: 20,
   },
   matchText: {
     fontSize: 18,

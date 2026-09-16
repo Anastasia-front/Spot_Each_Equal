@@ -79,7 +79,7 @@ export const homeStyles = StyleSheet.create({
     fontSize: 14,
     fontFamily: "Inter-Bold",
   },
-  footer: { padding: 20, alignItems: "center" },
+  footer: { padding: 10, alignItems: "center" },
   footerText: {
     color: "#FFFFFF",
     fontSize: 16,
