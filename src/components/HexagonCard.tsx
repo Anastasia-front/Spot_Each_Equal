@@ -7,11 +7,11 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
-import Svg, { ClipPath, Defs, G, Path, Rect } from "react-native-svg";
+import Svg, { ClipPath, Defs, G, Path } from "react-native-svg";
 
-import * as Icons from "@/assets/icons";
+import { getRoundedHexagonPath } from "@/utils/hexagonPath";
 
-import IconRenderer from "./IconRenderer";
+import HexagonCardSymbols from "./HexagonCardSymbols";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -95,91 +95,19 @@ const HexagonCard: React.FC<HexagonCardProps> = ({
 
         {/* Render symbols */}
         <G clipPath={`url(#card-clip-${card.id})`}>
-          {card.symbols.map((symbol: any, index: number) => {
-            const radius = size * 0.5;
-            const iconSize = size * (symbol.size ?? 0.2);
-            const touchPadding = iconSize * 0.18;
-            const outlineStatus = selectedSymbols[index];
-            const outlineColor =
-              outlineStatus === "success"
-                ? "#2ECC71"
-                : outlineStatus === "error"
-                  ? "#FF4D4F"
-                  : "#FFD43B";
-
-            const x = centerX + symbol.position.x * (radius * 0.68);
-            const y = centerY + symbol.position.y * (radius * 0.68);
-            const maskId = `symbol-outline-${card.id}-${index}`;
-
-            return (
-              <G
-                key={index}
-                onPress={() => {
-                  if (!disabled) {
-                    onSymbolPress?.(symbol, index);
-                  }
-                }}
-                transform={`translate(${x}, ${y}) rotate(${symbol.rotation ?? 0}) translate(${-iconSize / 2}, ${-iconSize / 2})`}
-              >
-                <Rect
-                  x={-touchPadding}
-                  y={-touchPadding}
-                  width={iconSize + touchPadding * 2}
-                  height={iconSize + touchPadding * 2}
-                  fill="transparent"
-                />
-                <IconRenderer
-                  icon={Icons[symbol.icon as keyof typeof Icons]}
-                  color={symbol.color}
-                  size={iconSize}
-                  outlineColor={outlineStatus ? outlineColor : undefined}
-                  outlineWidth={Math.max(3, size * 0.012)}
-                  maskId={maskId}
-                />
-              </G>
-            );
-          })}
+          <HexagonCardSymbols
+            card={card}
+            centerX={centerX}
+            centerY={centerY}
+            disabled={disabled}
+            onSymbolPress={onSymbolPress}
+            selectedSymbols={selectedSymbols}
+            size={size}
+          />
         </G>
       </Svg>
     </AnimatedTouchableOpacity>
   );
 };
-
-function getRoundedHexagonPath(size: number): string {
-  const inset = size * 0.06;
-  const radius = size * 0.5 - inset;
-  const cornerRadius = size * 0.035;
-  const center = size / 2;
-  const points = Array.from({ length: 6 }, (_, i) => {
-    const angle = i * 60 * (Math.PI / 180);
-    return {
-      x: center + radius * Math.cos(angle),
-      y: center + radius * Math.sin(angle),
-    };
-  });
-
-  return points
-    .map((point, index) => {
-      const previous = points[(index + points.length - 1) % points.length];
-      const next = points[(index + 1) % points.length];
-      const previousAngle = Math.atan2(
-        previous.y - point.y,
-        previous.x - point.x,
-      );
-      const nextAngle = Math.atan2(next.y - point.y, next.x - point.x);
-      const start = {
-        x: point.x + Math.cos(previousAngle) * cornerRadius,
-        y: point.y + Math.sin(previousAngle) * cornerRadius,
-      };
-      const end = {
-        x: point.x + Math.cos(nextAngle) * cornerRadius,
-        y: point.y + Math.sin(nextAngle) * cornerRadius,
-      };
-
-      return `${index === 0 ? "M" : "L"} ${start.x} ${start.y} Q ${point.x} ${point.y} ${end.x} ${end.y}`;
-    })
-    .join(" ")
-    .concat(" Z");
-}
 
 export default HexagonCard;
