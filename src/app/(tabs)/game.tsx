@@ -1,6 +1,6 @@
 import HexagonCard from "@/components/HexagonCard";
 import { useGame } from "@/context/GameContext";
-import { findCommonSymbol, getCardPosition, getCardSize } from "@/utils";
+import { getCardPosition, getCardSize } from "@/utils";
 import { router, useLocalSearchParams } from "expo-router";
 import { ArrowLeft, Pause, Play, RotateCcw } from "lucide-react-native";
 import { useEffect, useState } from "react";
@@ -8,22 +8,102 @@ import { useTranslation } from "react-i18next";
 import {
   Dimensions,
   Platform,
-  SafeAreaView,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import Animated, {
+  Easing,
   useAnimatedStyle,
   useSharedValue,
-  withSequence,
   withSpring,
   withTiming,
 } from "react-native-reanimated";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Svg, { Path } from "react-native-svg";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+const gameCanvasHeight = screenHeight * 0.64;
+const TOTAL_STACK_CARDS = 55;
+
+type SelectedSymbol = {
+  cardId: string;
+  symbolIndex: number;
+  icon: string;
+  status: "selected" | "error" | "success";
+};
+
+const getSelectedSymbolsForCard = (
+  selectedSymbols: SelectedSymbol[],
+  cardId: string,
+) =>
+  selectedSymbols
+    .filter((selected) => selected.cardId === cardId)
+    .reduce<Record<number, SelectedSymbol["status"]>>((acc, selected) => {
+      acc[selected.symbolIndex] = selected.status;
+      return acc;
+    }, {});
+
+const DeckPile = ({ size }: { size: number }) => {
+  const points = getFlatHexagonPoints(size);
+
+  return (
+    <View
+      style={[
+        styles.deckPile,
+        {
+          width: size,
+          height: size,
+          right: -size * 0.48,
+          marginTop: -size / 2,
+        },
+      ]}
+    >
+      {[3, 2, 1, 0].map((offset) => (
+        <Svg
+          key={offset}
+          width={size}
+          height={size}
+          viewBox={`0 0 ${size} ${size}`}
+          style={[
+            styles.deckPileLayer,
+            {
+              transform: [
+                { translateX: -offset * 3 },
+                { translateY: offset * 3 },
+              ],
+            },
+          ]}
+        >
+          <Path
+            d={points}
+            fill={offset === 0 ? "#FFFDF8" : "#F1EFE8"}
+            stroke="#D5D1C8"
+            strokeWidth={2}
+          />
+        </Svg>
+      ))}
+      <View style={styles.deckBadge}>
+        <Text style={styles.deckBadgeText}>{TOTAL_STACK_CARDS}</Text>
+      </View>
+    </View>
+  );
+};
+
+function getFlatHexagonPoints(size: number) {
+  const center = size / 2;
+  const radius = size * 0.44;
+
+  return Array.from({ length: 6 }, (_, i) => {
+    const angle = i * 60 * (Math.PI / 180);
+    const x = center + radius * Math.cos(angle);
+    const y = center + radius * Math.sin(angle);
+    return `${i === 0 ? "M" : "L"} ${x} ${y}`;
+  })
+    .join(" ")
+    .concat(" Z");
+}
 
 const GameScreen = () => {
   const { t } = useTranslation();
@@ -31,7 +111,7 @@ const GameScreen = () => {
   const { gameMode: rawGameMode } = useLocalSearchParams();
   const gameMode = Array.isArray(rawGameMode) ? rawGameMode[0] : rawGameMode;
 
-  const [selectedCards, setSelectedCards] = useState<any[]>([]);
+  const [selectedSymbols, setSelectedSymbols] = useState<SelectedSymbol[]>([]);
   const [showMatch, setShowMatch] = useState(false);
   const [matchedSymbol, setMatchedSymbol] = useState<string | null>(null);
 
@@ -39,7 +119,7 @@ const GameScreen = () => {
 
   // Animation values
   const matchScale = useSharedValue(0);
-  const cardShake = useSharedValue(0);
+  const dealProgress = useSharedValue(1);
 
   useEffect(() => {
     if (gameMode) {
@@ -49,60 +129,77 @@ const GameScreen = () => {
     }
   }, [gameMode]);
 
+  useEffect(() => {
+    if (!state.cards.length) return;
+
+    dealProgress.value = 0;
+    dealProgress.value = withTiming(1, {
+      duration: 420,
+      easing: Easing.out(Easing.cubic),
+    });
+  }, [state.cards[0]?.id, state.cards[1]?.id]);
+
   const triggerHapticFeedback = () => {
     if (Platform.OS !== "web") {
       console.log("Haptic feedback triggered");
     }
   };
 
-  const handleCardPress = (card: any) => {
+  const handleSymbolPress = (card: any, symbol: any, symbolIndex: number) => {
     if (state.gamePaused || state.gameOver) return;
+    if (selectedSymbols.some((selected) => selected.status !== "selected")) {
+      return;
+    }
 
     triggerHapticFeedback();
 
-    const alreadySelected = selectedCards.some((c) => c.id === card.id);
-    if (alreadySelected) return;
+    const currentSelection: SelectedSymbol = {
+      cardId: card.id,
+      symbolIndex,
+      icon: symbol.icon,
+      status: "selected",
+    };
+    const previousSelection = selectedSymbols[0];
 
-    const newSelection = [...selectedCards, card];
-    setSelectedCards(newSelection);
-
-    // Check if we have enough cards selected
-    if (newSelection.length === cardsToMatch) {
-      const allSymbols = newSelection.map((c) => c.symbols);
-      const matchingSymbol = findCommonSymbol(allSymbols);
-
-      if (matchingSymbol) {
-        // Match found!
-        setMatchedSymbol(matchingSymbol);
-        setShowMatch(true);
-
-        matchScale.value = withSequence(withSpring(1.2), withSpring(1));
-
-        dispatch({
-          type: "MATCH_FOUND",
-          payload: { cards: newSelection, symbol: matchingSymbol },
-        });
-
-        setTimeout(() => {
-          setShowMatch(false);
-          setSelectedCards([]);
-          setMatchedSymbol(null);
-          matchScale.value = 0;
-          dispatch({ type: "CLEAR_MATCH" });
-        }, 2000);
-      } else {
-        // No match — shake
-        cardShake.value = withSequence(
-          withTiming(10, { duration: 50 }),
-          withTiming(-10, { duration: 50 }),
-          withTiming(10, { duration: 50 }),
-          withTiming(0, { duration: 50 })
-        );
-
-        // Reset to only last clicked card to try again
-        setSelectedCards([card]);
-      }
+    if (!previousSelection || previousSelection.cardId === card.id) {
+      setSelectedSymbols([currentSelection]);
+      return;
     }
+
+    const isMatch = previousSelection.icon === symbol.icon;
+    const status = isMatch ? "success" : "error";
+    const resolvedSelection: SelectedSymbol[] = [
+      { ...previousSelection, status },
+      { ...currentSelection, status },
+    ];
+
+    setSelectedSymbols(resolvedSelection);
+
+    if (!isMatch) {
+      setTimeout(() => {
+        setSelectedSymbols([]);
+      }, 1000);
+      return;
+    }
+
+    setMatchedSymbol(symbol.icon);
+    setShowMatch(true);
+    matchScale.value = withSpring(1);
+
+    setTimeout(() => {
+      dispatch({
+        type: "MATCH_FOUND",
+        payload: {
+          cards: state.cards.slice(0, cardsToMatch),
+          symbol: symbol.icon,
+        },
+      });
+      setShowMatch(false);
+      setSelectedSymbols([]);
+      setMatchedSymbol(null);
+      matchScale.value = 0;
+      dispatch({ type: "CLEAR_MATCH" });
+    }, 1000);
   };
 
   const handleNewGame = () => {
@@ -112,7 +209,7 @@ const GameScreen = () => {
       dispatch({ type: "SET_PLAYERS", payload: ["Player 1", "Player 2"] });
       dispatch({ type: "START_GAME" });
     }
-    setSelectedCards([]);
+    setSelectedSymbols([]);
     setShowMatch(false);
     setMatchedSymbol(null);
     matchScale.value = 0;
@@ -131,9 +228,18 @@ const GameScreen = () => {
     opacity: matchScale.value,
   }));
 
-  const cardShakeStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: cardShake.value }],
+  const dealtCardAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: dealProgress.value,
+    transform: [
+      { translateX: (1 - dealProgress.value) * screenWidth * 0.32 },
+      { scale: 0.94 + dealProgress.value * 0.06 },
+    ],
   }));
+
+  const cardSize =
+    cardsToMatch === 2
+      ? Math.min(screenWidth * 0.82, gameCanvasHeight / 2 - 22)
+      : getCardSize(cardsToMatch, screenWidth);
 
   if (!state.cards.length) {
     return (
@@ -146,106 +252,138 @@ const GameScreen = () => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.headerButton}
-          onPress={() => router.back()}
-        >
-          <ArrowLeft size={20} color="#667eea" />
-          <Text style={styles.headerButtonText}>{t("buttons.back")}</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.gameModeTitle}>{t(`gameModes.${gameMode}`)}</Text>
-
-        <View style={styles.headerActions}>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
           <TouchableOpacity
             style={styles.headerButton}
-            onPress={handlePauseToggle}
+            onPress={() => router.back()}
           >
-            {state.gamePaused ? (
-              <Play size={20} color="#667eea" />
+            <ArrowLeft size={20} color="#667eea" />
+            <Text style={styles.headerButtonText}>{t("buttons.back")}</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.gameModeTitle}>{t(`gameModes.${gameMode}`)}</Text>
+
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              style={styles.headerButton}
+              onPress={handlePauseToggle}
+            >
+              {state.gamePaused ? (
+                <Play size={20} color="#667eea" />
+              ) : (
+                <Pause size={20} color="#667eea" />
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.headerButton}
+              onPress={handleNewGame}
+            >
+              <RotateCcw size={20} color="#667eea" />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Match notification */}
+        {showMatch && (
+          <Animated.View style={[styles.matchNotification, matchAnimatedStyle]}>
+            <Text style={styles.matchText}>{t("foundMatch")}</Text>
+            <Text style={styles.matchSymbol}>
+              {t("symbolLabel")}: {matchedSymbol}
+            </Text>
+          </Animated.View>
+        )}
+
+        {/* Pause overlay */}
+        {state.gamePaused && (
+          <View style={styles.pauseOverlay}>
+            <Text style={styles.pauseText}>{t("gamePaused")}</Text>
+            <TouchableOpacity
+              style={styles.resumeButton}
+              onPress={handlePauseToggle}
+            >
+              <Play size={24} color="#FFFFFF" />
+              <Text style={styles.resumeButtonText}>{t("buttons.resume")}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Game area */}
+        <View style={styles.gameArea}>
+          <DeckPile size={cardSize * 0.74} />
+          <Animated.View style={[styles.cardsGrid, dealtCardAnimatedStyle]}>
+            {cardsToMatch === 2 ? (
+              <View style={styles.twoCardsStack}>
+                {state.cards.slice(0, cardsToMatch).map((card: any) => (
+                  <View key={card.id} style={styles.twoCardSlot}>
+                    <HexagonCard
+                      card={card}
+                      size={cardSize}
+                      style={styles.centeredCard}
+                      onSymbolPress={(symbol, symbolIndex) =>
+                        handleSymbolPress(card, symbol, symbolIndex)
+                      }
+                      selectedSymbols={getSelectedSymbolsForCard(
+                        selectedSymbols,
+                        card.id,
+                      )}
+                      disabled={state.gamePaused}
+                    />
+                  </View>
+                ))}
+              </View>
             ) : (
-              <Pause size={20} color="#667eea" />
+              state.cards.slice(0, cardsToMatch).map((card: any, index) => {
+                const visibleCards = cardsToMatch;
+
+                const { x, y } = getCardPosition(
+                  index,
+                  visibleCards,
+                  Math.min(screenWidth, screenHeight) * 0.23,
+                  screenWidth / 2,
+                  Math.min(screenHeight * 0.38, 330),
+                );
+
+                return (
+                  <HexagonCard
+                    key={card.id}
+                    card={card}
+                    size={cardSize}
+                    style={{ position: "absolute", left: x, top: y }}
+                    onSymbolPress={(symbol, symbolIndex) =>
+                      handleSymbolPress(card, symbol, symbolIndex)
+                    }
+                    selectedSymbols={getSelectedSymbolsForCard(
+                      selectedSymbols,
+                      card.id,
+                    )}
+                    disabled={state.gamePaused}
+                  />
+                );
+              })
             )}
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.headerButton} onPress={handleNewGame}>
-            <RotateCcw size={20} color="#667eea" />
-          </TouchableOpacity>
+          </Animated.View>
         </View>
-      </View>
 
-      {/* Match notification */}
-      {showMatch && (
-        <Animated.View style={[styles.matchNotification, matchAnimatedStyle]}>
-          <Text style={styles.matchText}>{t("foundMatch")}</Text>
-          <Text style={styles.matchSymbol}>
-            {t("symbolLabel")}: {matchedSymbol}
+        {/* Instructions */}
+        <View style={styles.instructions}>
+          <Text style={styles.instructionsText}>
+            {t("instructions.findSymbol", { count: cardsToMatch })}
           </Text>
-        </Animated.View>
-      )}
-
-      {/* Pause overlay */}
-      {state.gamePaused && (
-        <View style={styles.pauseOverlay}>
-          <Text style={styles.pauseText}>{t("gamePaused")}</Text>
-          <TouchableOpacity
-            style={styles.resumeButton}
-            onPress={handlePauseToggle}
-          >
-            <Play size={24} color="#FFFFFF" />
-            <Text style={styles.resumeButtonText}>{t("buttons.resume")}</Text>
-          </TouchableOpacity>
         </View>
-      )}
-
-      {/* Game area */}
-      <ScrollView
-        style={styles.gameArea}
-        contentContainerStyle={styles.gameContent}
-      >
-        <Animated.View style={[styles.cardsGrid, cardShakeStyle]}>
-          {state.cards.slice(0, cardsToMatch).map((card: any, index) => {
-            const visibleCards = cardsToMatch;
-
-            const { x, y } = getCardPosition(
-              index,
-              visibleCards,
-              Math.min(screenWidth, screenHeight) * 0.23,
-              screenWidth / 2,
-              Math.min(screenHeight * 0.38, 330)
-            );
-
-            return (
-              <HexagonCard
-                key={card.id}
-                card={card}
-                size={getCardSize(visibleCards, screenWidth)}
-                style={{ position: "absolute", left: x, top: y }}
-                onPress={() => handleCardPress(card)}
-                highlighted={selectedCards.some(
-                  (selected) => selected.id === card.id
-                )}
-                disabled={state.gamePaused}
-              />
-            );
-          })}
-        </Animated.View>
-      </ScrollView>
-
-      {/* Instructions */}
-      <View style={styles.instructions}>
-        <Text style={styles.instructionsText}>
-          {t("instructions.findSymbol", { count: cardsToMatch })}
-        </Text>
       </View>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+  },
   container: {
     flex: 1,
     backgroundColor: "#F0F4F8",
@@ -265,8 +403,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 20,
-    paddingTop: 50,
-    paddingBottom: 15,
+    paddingVertical: 10,
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
     borderBottomColor: "#E1E8ED",
@@ -345,14 +482,25 @@ const styles = StyleSheet.create({
   },
   gameArea: {
     flex: 1,
-  },
-  gameContent: {
-    padding: 20,
-    minHeight: screenHeight * 0.68,
+    backgroundColor: "#F0F4F8",
+    overflow: "hidden",
   },
   cardsGrid: {
-    minHeight: screenHeight * 0.62,
+    flex: 1,
     position: "relative",
+    zIndex: 2,
+  },
+  twoCardsStack: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  twoCardSlot: {
+    height: "50%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  centeredCard: {
+    margin: 0,
   },
   instructions: {
     backgroundColor: "#FFFFFF",
@@ -367,6 +515,30 @@ const styles = StyleSheet.create({
     color: "#666",
     textAlign: "center",
     lineHeight: 22,
+  },
+  deckPile: {
+    position: "absolute",
+    top: "50%",
+    zIndex: 1,
+  },
+  deckPileLayer: {
+    position: "absolute",
+  },
+  deckBadge: {
+    position: "absolute",
+    left: "31%",
+    top: "40%",
+    backgroundColor: "#667eea",
+    borderRadius: 18,
+    minWidth: 36,
+    height: 36,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  deckBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontFamily: "Inter-Bold",
   },
 });
 

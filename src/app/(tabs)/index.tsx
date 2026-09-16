@@ -2,18 +2,19 @@ import { getGameModes } from "@/constants";
 import { useGame } from "@/context";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import { ChevronDown } from "lucide-react-native";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ImageBackground,
   Modal,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const HomeScreen = () => {
   const { t } = useTranslation();
@@ -24,6 +25,9 @@ const HomeScreen = () => {
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [pendingMode, setPendingMode] = useState<any>(null);
   const [selectedPlayers, setSelectedPlayers] = useState<number | 2>(2);
+  const [openModeKey, setOpenModeKey] = useState<string | null>(
+    gameModes[0]?.key ?? null,
+  );
 
   const handleGameModeSelect = (mode: any) => {
     setPendingMode(mode);
@@ -74,13 +78,9 @@ const HomeScreen = () => {
           >
             {gameModes.map((mode) => {
               const IconComponent = mode.icon;
+              const isOpen = openModeKey === mode.key;
               return (
-                <TouchableOpacity
-                  key={mode.key}
-                  style={styles.gameModeCard}
-                  onPress={() => handleGameModeSelect(mode)}
-                  activeOpacity={0.8}
-                >
+                <View key={mode.key} style={styles.gameModeCard}>
                   <LinearGradient
                     colors={mode.color}
                     style={styles.cardGradient}
@@ -88,7 +88,15 @@ const HomeScreen = () => {
                     end={{ x: 1, y: 1 }}
                   >
                     <View style={styles.cardContent}>
-                      <View style={styles.cardHeader}>
+                      <TouchableOpacity
+                        style={styles.cardHeader}
+                        activeOpacity={0.8}
+                        onPress={() =>
+                          setOpenModeKey((current) =>
+                            current === mode.key ? null : mode.key,
+                          )
+                        }
+                      >
                         <View style={styles.titleRow}>
                           <IconComponent size={28} color="#FFFFFF" />
                           <Text style={styles.cardTitle}>{mode.title}</Text>
@@ -98,13 +106,35 @@ const HomeScreen = () => {
                             {mode.players} {t("players")}
                           </Text>
                         </View>
-                      </View>
-                      <Text style={styles.cardDescription}>
-                        {mode.description}
-                      </Text>
+                        <ChevronDown
+                          size={22}
+                          color="#FFFFFF"
+                          style={[
+                            styles.dropdownIcon,
+                            isOpen && styles.dropdownIconOpen,
+                          ]}
+                        />
+                      </TouchableOpacity>
+
+                      {isOpen && (
+                        <View style={styles.dropdownBody}>
+                          <Text style={styles.cardDescription}>
+                            {mode.description}
+                          </Text>
+                          <TouchableOpacity
+                            style={styles.selectModeButton}
+                            activeOpacity={0.85}
+                            onPress={() => handleGameModeSelect(mode)}
+                          >
+                            <Text style={styles.selectModeText}>
+                              {t("buttons.play")}
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                      )}
                     </View>
                   </LinearGradient>
-                </TouchableOpacity>
+                </View>
               );
             })}
           </ScrollView>
@@ -151,7 +181,9 @@ const HomeScreen = () => {
               disabled={!selectedPlayers}
               onPress={handleConfirm}
             >
-              <Text style={styles.confirmButtonText}>{t("buttons.continue")}</Text>
+              <Text style={styles.confirmButtonText}>
+                {t("buttons.continue")}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -161,7 +193,7 @@ const HomeScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: "#667eea" },
   backgroundImage: { flex: 1 },
   background: { flex: 1 },
   header: {
@@ -184,13 +216,16 @@ const styles = StyleSheet.create({
   },
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 20, paddingBottom: 20 },
-  gameModeCard: { marginBottom: 16, borderRadius: 20 },
-  cardGradient: { borderRadius: 20, padding: 24 },
+  gameModeCard: {
+    marginBottom: 12,
+    borderRadius: 18,
+    overflow: "hidden",
+  },
+  cardGradient: { borderRadius: 18, padding: 18 },
   cardContent: { flex: 1 },
   cardHeader: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 16,
+    alignItems: "center",
   },
   titleRow: { flexDirection: "row", alignItems: "center", flex: 1 },
   cardTitle: {
@@ -202,16 +237,39 @@ const styles = StyleSheet.create({
   playersTag: {
     backgroundColor: "rgba(255, 255, 255, 0.3)",
     paddingHorizontal: 12,
-    paddingTop: 10,
+    paddingVertical: 8,
     borderRadius: 16,
   },
   playersText: { fontSize: 12, fontFamily: "Inter-SemiBold", color: "#FFFFFF" },
+  dropdownIcon: {
+    marginLeft: 10,
+    transform: [{ rotate: "0deg" }],
+  },
+  dropdownIconOpen: {
+    transform: [{ rotate: "180deg" }],
+  },
+  dropdownBody: {
+    marginTop: 16,
+  },
   cardDescription: {
     fontSize: 15,
     fontFamily: "Inter-Regular",
     color: "#FFFFFF",
     opacity: 0.95,
     lineHeight: 22,
+  },
+  selectModeButton: {
+    alignSelf: "flex-start",
+    backgroundColor: "rgba(255, 255, 255, 0.28)",
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 14,
+    marginTop: 14,
+  },
+  selectModeText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontFamily: "Inter-Bold",
   },
   footer: { padding: 20, alignItems: "center" },
   footerText: {

@@ -2,13 +2,13 @@ import { languages } from "@/constants";
 import { Check, Globe, Info } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import {
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const SettingsScreen = () => {
   const { t, i18n } = useTranslation();
