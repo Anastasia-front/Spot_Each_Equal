@@ -1,4 +1,4 @@
-import { generateCards } from "@/utils";
+import { findCommonSymbol, generateCards } from "@/utils";
 import React, { createContext, ReactNode, useContext, useReducer } from "react";
 
 type SymbolData = {
@@ -7,6 +7,8 @@ type SymbolData = {
     x: number;
     y: number;
   };
+  rotation?: number;
+  size?: number;
 };
 
 type Card = {
@@ -44,6 +46,24 @@ const initialState: GameState = {
   numPlayers: 2,
   gamePaused: false,
   gameOver: false,
+};
+
+const generateCardsWithDifferentVisibleMatch = (
+  cardsToMatch: number,
+  previousSymbol: string,
+) => {
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const cards = generateCards(55);
+    const visibleMatch = findCommonSymbol(
+      cards.slice(0, cardsToMatch).map((card) => card.symbols),
+    );
+
+    if (visibleMatch !== previousSymbol) {
+      return cards;
+    }
+  }
+
+  return generateCards(55);
 };
 
 function gameReducer(state: GameState, action: Action): GameState {
@@ -86,7 +106,13 @@ function gameReducer(state: GameState, action: Action): GameState {
         gamePaused: false,
       };
     case "MATCH_FOUND":
-      return { ...state };
+      return {
+        ...state,
+        cards: generateCardsWithDifferentVisibleMatch(
+          state.cardsToMatch,
+          action.payload.symbol,
+        ),
+      };
     case "CLEAR_MATCH":
       return { ...state };
     case "RESET_GAME":
