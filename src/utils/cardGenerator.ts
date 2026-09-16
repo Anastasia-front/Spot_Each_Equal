@@ -16,6 +16,15 @@ type Card = {
 // number of symbols per card (classic is 8)
 const SYMBOLS_PER_CARD = 8;
 
+const shuffle = <T>(items: T[]) => {
+  const shuffled = [...items];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
 // Helper: generate Spot It deck
 function generateSpotItDeck(
   symbols: string[],
@@ -63,28 +72,24 @@ function generateSpotItDeck(
 }
 
 export const generateCards = (count?: number): Card[] => {
-  const allIcons = Object.keys(Icons);
-  const deckSymbolSets = generateSpotItDeck(allIcons, SYMBOLS_PER_CARD);
+  const allIcons = shuffle(Object.keys(Icons));
+  const deckSymbolSets = shuffle(generateSpotItDeck(allIcons, SYMBOLS_PER_CARD));
 
   const selectedSets = count
     ? deckSymbolSets.slice(0, Math.min(count, deckSymbolSets.length))
     : deckSymbolSets;
 
   return selectedSets.map((symbolSet, cardIndex) => {
-    const positions = layoutIconsInHex(symbolSet.length, {
-      safeRadius: 0.92,
-      jitter: 0.04,
-      minSeparation: 0.55,
-      iterations: 10,
-    });
+    const shuffledSymbols = shuffle(symbolSet);
+    const positions = layoutIconsInHex(shuffledSymbols.length);
 
     return {
-      id: `card-${cardIndex}`,
-      symbols: symbolSet.map((iconName, i) => ({
+      id: `card-${Date.now()}-${cardIndex}-${Math.random().toString(36).slice(2)}`,
+      symbols: shuffledSymbols.map((iconName, i) => ({
         icon: iconName,
         position: positions[i],
-        rotation: Math.round((Math.random() * 2 - 1) * 38),
-        size: 0.15 + Math.random() * 0.12,
+        rotation: Math.round((Math.random() * 2 - 1) * 32),
+        size: 0.16 + Math.random() * 0.05,
       })),
     };
   });
