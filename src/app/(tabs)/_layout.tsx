@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { Gamepad2, Home, Settings } from "lucide-react-native";
+import { Home, Settings, Trophy } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 
 export default function TabLayout() {
@@ -36,10 +36,8 @@ export default function TabLayout() {
       <Tabs.Screen
         name="game"
         options={{
-          title: t("buttons.game"),
-          tabBarIcon: ({ size, color }) => (
-            <Gamepad2 size={size} color={color} />
-          ),
+          title: t("buttons.scores"),
+          tabBarIcon: ({ size, color }) => <Trophy size={size} color={color} />,
         }}
       />
       <Tabs.Screen
