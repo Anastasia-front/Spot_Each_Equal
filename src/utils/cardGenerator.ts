@@ -73,7 +73,9 @@ function generateSpotItDeck(
 
 export const generateCards = (count?: number): Card[] => {
   const allIcons = shuffle(Object.keys(Icons));
-  const deckSymbolSets = shuffle(generateSpotItDeck(allIcons, SYMBOLS_PER_CARD));
+  const deckSymbolSets = shuffle(
+    generateSpotItDeck(allIcons, SYMBOLS_PER_CARD),
+  );
 
   const selectedSets = count
     ? deckSymbolSets.slice(0, Math.min(count, deckSymbolSets.length))
@@ -82,6 +84,9 @@ export const generateCards = (count?: number): Card[] => {
   return selectedSets.map((symbolSet, cardIndex) => {
     const shuffledSymbols = shuffle(symbolSet);
     const positions = layoutIconsInHex(shuffledSymbols.length);
+    const sizes = shuffle([
+      0.205, 0.19, 0.18, 0.168, 0.158, 0.15, 0.142, 0.134,
+    ]);
 
     return {
       id: `card-${Date.now()}-${cardIndex}-${Math.random().toString(36).slice(2)}`,
@@ -89,10 +94,14 @@ export const generateCards = (count?: number): Card[] => {
         icon: iconName,
         position: positions[i],
         rotation: Math.round((Math.random() * 2 - 1) * 32),
-        size: 0.16 + Math.random() * 0.05,
+        size: (sizes[i] ?? 0.16) + Math.random() * 0.008,
       })),
     };
   });
+};
+
+export const generateSmallPileCards = () => {
+  return shuffle(generateCards(56));
 };
 
 export const getCardSize = (numCards: number, screenWidth: number) =>
