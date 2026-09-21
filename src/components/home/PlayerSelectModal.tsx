@@ -2,28 +2,49 @@ import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 type PlayerSelectModalProps = {
   continueLabel: string;
+  playerOptions: number[];
   selectedPlayers: number;
   selectPlayersLabel: string;
   visible: boolean;
+  onClose: () => void;
   onConfirm: () => void;
   onSelectPlayers: (numPlayers: number) => void;
 };
 
 const PlayerSelectModal = ({
   continueLabel,
+  playerOptions,
   selectedPlayers,
   selectPlayersLabel,
   visible,
+  onClose,
   onConfirm,
   onSelectPlayers,
 }: PlayerSelectModalProps) => (
-  <Modal visible={visible} transparent animationType="fade">
-    <View style={styles.modalOverlay}>
-      <View style={styles.modalContent}>
+  <Modal
+    visible={visible}
+    transparent
+    animationType="fade"
+    onRequestClose={onClose}
+  >
+    <TouchableOpacity
+      activeOpacity={1}
+      style={styles.modalOverlay}
+      onPress={onClose}
+    >
+      <TouchableOpacity activeOpacity={1} style={styles.modalContent}>
+        <TouchableOpacity
+          accessibilityLabel="Close"
+          style={styles.closeButton}
+          onPress={onClose}
+        >
+          <Text style={styles.closeButtonText}>×</Text>
+        </TouchableOpacity>
+
         <Text style={styles.modalTitle}>{selectPlayersLabel}</Text>
 
         <View style={styles.playerOptions}>
-          {Array.from({ length: 8 }, (_, i) => i + 1).map((n) => (
+          {playerOptions?.map((n) => (
             <TouchableOpacity
               key={n}
               style={[
@@ -47,8 +68,8 @@ const PlayerSelectModal = ({
         <TouchableOpacity style={styles.confirmButton} onPress={onConfirm}>
           <Text style={styles.confirmButtonText}>{continueLabel}</Text>
         </TouchableOpacity>
-      </View>
-    </View>
+      </TouchableOpacity>
+    </TouchableOpacity>
   </Modal>
 );
 
@@ -62,9 +83,27 @@ const styles = StyleSheet.create({
   modalContent: {
     backgroundColor: "#FFF",
     padding: 24,
+    paddingTop: 54,
     borderRadius: 20,
     width: "85%",
     alignItems: "center",
+  },
+  closeButton: {
+    position: "absolute",
+    top: 12,
+    right: 14,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F0F4F8",
+  },
+  closeButtonText: {
+    color: "#667eea",
+    fontSize: 24,
+    fontFamily: "Inter-Bold",
+    lineHeight: 28,
   },
   modalTitle: {
     fontSize: 20,

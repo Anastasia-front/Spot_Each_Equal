@@ -1,4 +1,5 @@
 import * as Icons from "@/assets/icons";
+import React from "react";
 import { G, Rect } from "react-native-svg";
 
 import IconRenderer from "./IconRenderer";
@@ -34,8 +35,8 @@ const HexagonCardSymbols = ({
           : outlineStatus === "error"
             ? "#FF4D4F"
             : "#FFD43B";
-      const x = centerX + symbol.position.x * (radius * 0.68);
-      const y = centerY + symbol.position.y * (radius * 0.68);
+      const x = centerX + symbol.position.x * (radius * 0.72);
+      const y = centerY - size * 0.012 + symbol.position.y * (radius * 0.72);
       const maskId = `symbol-outline-${card.id}-${index}`;
 
       return (
@@ -65,4 +66,27 @@ const HexagonCardSymbols = ({
   </>
 );
 
-export default HexagonCardSymbols;
+const selectedSymbolsAreEqual = (
+  previous: HexagonCardSymbolsProps["selectedSymbols"],
+  next: HexagonCardSymbolsProps["selectedSymbols"],
+) => {
+  const previousKeys = Object.keys(previous);
+  const nextKeys = Object.keys(next);
+
+  return (
+    previousKeys.length === nextKeys.length &&
+    previousKeys.every((key) => previous[Number(key)] === next[Number(key)])
+  );
+};
+
+export default React.memo(
+  HexagonCardSymbols,
+  (previous, next) =>
+    previous.card === next.card &&
+    previous.centerX === next.centerX &&
+    previous.centerY === next.centerY &&
+    previous.disabled === next.disabled &&
+    previous.onSymbolPress === next.onSymbolPress &&
+    previous.size === next.size &&
+    selectedSymbolsAreEqual(previous.selectedSymbols, next.selectedSymbols),
+);

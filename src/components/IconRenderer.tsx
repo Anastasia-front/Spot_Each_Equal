@@ -1,11 +1,6 @@
 import * as Icons from "@/assets/icons";
-import {
-  Defs,
-  G,
-  Image as SvgImage,
-  Mask,
-  Rect,
-} from "react-native-svg";
+import React, { useMemo } from "react";
+import { Defs, G, Mask, Rect, Image as SvgImage } from "react-native-svg";
 
 interface IconRendererProps {
   icon: (typeof Icons)[keyof typeof Icons];
@@ -35,13 +30,24 @@ const IconRenderer = ({
   maskId,
 }: IconRendererProps) => {
   const shouldOutline = Boolean(outlineColor && maskId);
-  const outlineMasks = shouldOutline
-    ? OUTLINE_OFFSETS.map(([x, y], index) => ({
-        id: `${maskId}-${index}`,
-        x: x * outlineWidth,
-        y: y * outlineWidth,
-      }))
-    : [];
+  const outlineMasks = useMemo(
+    () =>
+      shouldOutline
+        ? OUTLINE_OFFSETS.map(([x, y], index) => ({
+            id: `${maskId}-${index}`,
+            x: x * outlineWidth,
+            y: y * outlineWidth,
+          }))
+        : [],
+    [maskId, outlineWidth, shouldOutline],
+  );
+  const maskPadding = outlineWidth * 2;
+  const maskBox = {
+    height: size + maskPadding * 2,
+    width: size + maskPadding * 2,
+    x: -maskPadding,
+    y: -maskPadding,
+  };
 
   return (
     <G>
@@ -51,11 +57,12 @@ const IconRenderer = ({
             <Mask
               key={mask.id}
               id={mask.id}
-              x={mask.x}
-              y={mask.y}
-              width={size}
-              height={size}
+              x={maskBox.x}
+              y={maskBox.y}
+              width={maskBox.width}
+              height={maskBox.height}
               maskUnits="userSpaceOnUse"
+              maskType="alpha"
             >
               <SvgImage
                 href={icon}
@@ -74,10 +81,10 @@ const IconRenderer = ({
         outlineMasks.map((mask) => (
           <Rect
             key={mask.id}
-            x={mask.x}
-            y={mask.y}
-            width={size}
-            height={size}
+            x={maskBox.x}
+            y={maskBox.y}
+            width={maskBox.width}
+            height={maskBox.height}
             fill={outlineColor}
             mask={`url(#${mask.id})`}
           />
@@ -93,4 +100,4 @@ const IconRenderer = ({
   );
 };
 
-export default IconRenderer;
+export default React.memo(IconRenderer);

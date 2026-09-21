@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useCallback, useMemo } from "react";
 
-import { Dimensions, TouchableOpacity, ViewStyle } from "react-native";
+import { StyleProp, TouchableOpacity, ViewStyle } from "react-native";
 
 import Animated, {
   useAnimatedStyle,
@@ -9,11 +9,10 @@ import Animated, {
 } from "react-native-reanimated";
 import Svg, { ClipPath, Defs, G, Path } from "react-native-svg";
 
+import { rs, screenWidth } from "@/components/game/shared/responsive";
 import { getRoundedHexagonPath } from "@/utils/hexagonPath";
 
 import HexagonCardSymbols from "./HexagonCardSymbols";
-
-const { width: screenWidth } = Dimensions.get("window");
 
 interface HexagonCardProps {
   card: any;
@@ -21,7 +20,8 @@ interface HexagonCardProps {
   onSymbolPress?: (symbol: any, symbolIndex: number) => void;
   selectedSymbols?: Record<number, "selected" | "error" | "success">;
   disabled?: boolean;
-  style?: ViewStyle;
+  faceDown?: boolean;
+  style?: StyleProp<ViewStyle>;
 }
 
 const AnimatedTouchableOpacity =
@@ -33,9 +33,10 @@ const HexagonCard: React.FC<HexagonCardProps> = ({
   onSymbolPress,
   selectedSymbols = {},
   disabled = false,
+  faceDown = false,
   style,
 }) => {
-  const hexagonPath = getRoundedHexagonPath(size);
+  const hexagonPath = useMemo(() => getRoundedHexagonPath(size), [size]);
   const centerX = size / 2;
   const centerY = size / 2;
 
@@ -48,15 +49,15 @@ const HexagonCard: React.FC<HexagonCardProps> = ({
     };
   });
 
-  const handlePressIn = () => {
-    scale.value = withSpring(0.95);
-    rotation.value = withSpring(2);
-  };
+  const handlePressIn = useCallback(() => {
+    scale.value = withSpring(0.98, { damping: 18, stiffness: 220 });
+    rotation.value = withSpring(0.6, { damping: 18, stiffness: 220 });
+  }, [rotation, scale]);
 
-  const handlePressOut = () => {
-    scale.value = withSpring(1);
-    rotation.value = withSpring(0);
-  };
+  const handlePressOut = useCallback(() => {
+    scale.value = withSpring(1, { damping: 18, stiffness: 220 });
+    rotation.value = withSpring(0, { damping: 18, stiffness: 220 });
+  }, [rotation, scale]);
 
   return (
     <AnimatedTouchableOpacity
@@ -68,7 +69,7 @@ const HexagonCard: React.FC<HexagonCardProps> = ({
         {
           width: size,
           height: size,
-          margin: 10,
+          margin: rs(10, 4, 14),
         },
         style,
         animatedStyle,
@@ -93,21 +94,56 @@ const HexagonCard: React.FC<HexagonCardProps> = ({
           opacity={disabled ? 0.6 : 1}
         />
 
-        {/* Render symbols */}
         <G clipPath={`url(#card-clip-${card.id})`}>
-          <HexagonCardSymbols
-            card={card}
-            centerX={centerX}
-            centerY={centerY}
-            disabled={disabled}
-            onSymbolPress={onSymbolPress}
-            selectedSymbols={selectedSymbols}
-            size={size}
-          />
+          {faceDown ? (
+            <>
+              <Path d={hexagonPath} fill="#667eea" opacity={0.96} />
+              <Path
+                d={hexagonPath}
+                fill="none"
+                stroke="#FFFFFF"
+                strokeDasharray={`${size * 0.05} ${size * 0.045}`}
+                strokeWidth={size * 0.018}
+                transform={`scale(0.78) translate(${size * 0.14} ${size * 0.14})`}
+              />
+            </>
+          ) : (
+            <HexagonCardSymbols
+              card={card}
+              centerX={centerX}
+              centerY={centerY}
+              disabled={disabled}
+              onSymbolPress={onSymbolPress}
+              selectedSymbols={selectedSymbols}
+              size={size}
+            />
+          )}
         </G>
       </Svg>
     </AnimatedTouchableOpacity>
   );
 };
 
-export default HexagonCard;
+const selectedSymbolsAreEqual = (
+  previous: HexagonCardProps["selectedSymbols"] = {},
+  next: HexagonCardProps["selectedSymbols"] = {},
+) => {
+  const previousKeys = Object.keys(previous);
+  const nextKeys = Object.keys(next);
+
+  return (
+    previousKeys.length === nextKeys.length &&
+    previousKeys.every((key) => previous[Number(key)] === next[Number(key)])
+  );
+};
+
+export default React.memo(
+  HexagonCard,
+  (previous, next) =>
+    previous.card === next.card &&
+    previous.size === next.size &&
+    previous.disabled === next.disabled &&
+    previous.faceDown === next.faceDown &&
+    previous.style === next.style &&
+    selectedSymbolsAreEqual(previous.selectedSymbols, next.selectedSymbols),
+);
