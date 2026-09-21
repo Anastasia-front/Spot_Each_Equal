@@ -3,10 +3,12 @@ export const en = {
     buttons: {
       play: "Play",
       game: "Game",
+      scores: "Scores",
       settings: "Settings",
       back: "Back",
       resume: "Resume",
       continue: "Continue",
+      newGame: "New game",
     },
     instructions: {
       findSymbol:
@@ -17,6 +19,18 @@ export const en = {
     gamePaused: "Game Paused",
     foundMatch: "Found a match!",
     findMatchingSymbol: "Find the matching symbol between any two cards!",
+    results: {
+      title: "Game results",
+      winner: "Winner",
+      points: "points",
+    },
+    scores: {
+      title: "Scores",
+      subtitle: "Filter by mode and compare player scores.",
+      emptyTitle: "No scores yet",
+      emptyText:
+        "Start this mode from Play to see its current scoreboard here.",
+    },
     gameTitle: "Spot Each Equal",
     selectGameMode: "Select game mode",
     selectPlayers: "Select number of players",
@@ -35,16 +49,16 @@ export const en = {
       memo: "Memorize the symbols on your card, then find matching symbols from memory as new cards appear. Correct answers score points.",
       reset:
         "All cards are dealt to players. Race to find the shared symbol with the central discard pile and get rid of your cards first.",
-      duel: "Two players try to win every card from the opponent by spotting matches faster.",
+      duel: "Two players compete to take all of their opponent’s cards by finding matching symbols faster and winning each round.",
       smallPile:
-        "Scatter the cards on the table and race to collect matching pairs. Shadow and special-symbol cards can add extra challenges later.",
+        "Scatter the cards across the table, then race against the other players to spot matching pairs and collect them as quickly as possible.",
     },
     aboutTitle: "About",
     aboutDescription:
       "A fast-paced card matching game where every pair of cards shares exactly one identical symbol. Test your observation skills and reaction time in this beautifully designed mobile experience!",
     gameFeaturesTitle: "Game Features:",
     gameFeatures: {
-      cards: "55 unique hexagonal cards",
+      cards: "56 unique hexagonal cards",
       modes: "6 different game modes",
       multiplayer: "Multiplayer support",
       languages: "Multiple languages",
