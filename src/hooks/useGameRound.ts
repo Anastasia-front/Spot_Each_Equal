@@ -1,19 +1,21 @@
-import { useEffect, useState } from "react";
-import { Platform } from "react-native";
-import {
-  Easing,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
-} from "react-native-reanimated";
+import { useCallback, useMemo, useState } from "react";
 
 import {
   gameCanvasHeight,
   screenWidth,
-} from "@/components/game/game.styles";
-import { SelectedSymbol } from "@/components/game/types";
-import { getCardSize } from "@/utils";
+} from "@/components/game/shared/game.styles";
+import { clamp, vh, vw } from "@/components/game/shared/responsive";
+import { SelectedSymbol } from "@/components/game/shared/types";
+import { createPlayerNames, getCardSize } from "@/utils";
+
+import {
+  useDealAnimation,
+  useMemoryPreview,
+  useModeSimulations,
+  useRoundAnimationState,
+  useRoundSymbolPress,
+  useStartGame,
+} from "./gameRound";
 
 export const useGameRound = ({
   dispatch,
@@ -27,111 +29,110 @@ export const useGameRound = ({
   const [selectedSymbols, setSelectedSymbols] = useState<SelectedSymbol[]>([]);
   const [showMatch, setShowMatch] = useState(false);
   const [matchedSymbol, setMatchedSymbol] = useState<string | null>(null);
+  const [matchMessage, setMatchMessage] = useState<string | null>(null);
 
   const cardsToMatch = state.cardsToMatch || 2;
-  const dealProgress = useSharedValue(1);
-  const matchScale = useSharedValue(0);
+  const flags = useMemo(
+    () => ({
+      duelMode: gameMode === "duel",
+      memoryMode: gameMode === "memo",
+      resetMode: gameMode === "reset",
+      smallPileMode: gameMode === "smallPile",
+      stackMode: gameMode === "me" || gameMode === "you",
+    }),
+    [gameMode],
+  );
 
-  useEffect(() => {
-    if (!gameMode) return;
+  useStartGame(dispatch, gameMode, state);
+  const dealtCardAnimatedStyle = useDealAnimation(state);
+  const { memorySeconds, memoryVisible, setMemoryVisible } = useMemoryPreview(
+    flags.memoryMode,
+    state,
+  );
+  const {
+    animateCenterCardToReceiver,
+    clearSelection,
+    collectAnimatedStyle,
+    collectingCard,
+    collectingReceiverIndex,
+    matchAnimatedStyle,
+    matchScale,
+  } = useRoundAnimationState({
+    gameMode,
+    setMatchedSymbol,
+    setMatchMessage,
+    setSelectedSymbols,
+    setShowMatch,
+    state,
+  });
 
-    dispatch({ type: "SET_GAME_MODE", payload: gameMode });
-    dispatch({ type: "SET_PLAYERS", payload: ["Player 1", "Player 2"] });
-    dispatch({ type: "START_GAME" });
-  }, [dispatch, gameMode]);
+  const feedbackControls = useMemo(
+    () => ({
+      matchScale,
+      setMatchedSymbol,
+      setMatchMessage,
+      setShowMatch,
+    }),
+    [matchScale],
+  );
 
-  useEffect(() => {
-    if (!state.cards.length) return;
+  useModeSimulations({
+    animateCenterCardToReceiver,
+    clearSelection,
+    dispatch,
+    feedbackControls,
+    flags,
+    gameMode,
+    selectedSymbolsLength: selectedSymbols.length,
+    state,
+  });
 
-    dealProgress.value = 0;
-    dealProgress.value = withTiming(1, {
-      duration: 420,
-      easing: Easing.out(Easing.cubic),
-    });
-  }, [dealProgress, state.cards]);
+  const handleSymbolPress = useRoundSymbolPress({
+    animateCenterCardToReceiver,
+    cardsToMatch,
+    clearSelection,
+    dispatch,
+    feedbackControls,
+    flags,
+    gameMode,
+    selectedSymbols,
+    setMemoryVisible,
+    setSelectedSymbols,
+    state,
+  });
 
-  const clearSelection = () => {
-    setSelectedSymbols([]);
-    setShowMatch(false);
-    setMatchedSymbol(null);
-    matchScale.value = 0;
-  };
-
-  const handleSymbolPress = (card: any, symbol: any, symbolIndex: number) => {
-    if (state.gamePaused || state.gameOver) return;
-    if (selectedSymbols.some((selected) => selected.status !== "selected")) {
-      return;
-    }
-
-    if (Platform.OS !== "web") console.log("Haptic feedback triggered");
-
-    const current: SelectedSymbol = {
-      cardId: card.id,
-      symbolIndex,
-      icon: symbol.icon,
-      status: "selected",
-    };
-    const previous = selectedSymbols[0];
-
-    if (!previous || previous.cardId === card.id) {
-      setSelectedSymbols([current]);
-      return;
-    }
-
-    const status = previous.icon === symbol.icon ? "success" : "error";
-    setSelectedSymbols([{ ...previous, status }, { ...current, status }]);
-
-    if (status === "error") {
-      setTimeout(() => setSelectedSymbols([]), 1000);
-      return;
-    }
-
-    setMatchedSymbol(symbol.icon);
-    setShowMatch(true);
-    matchScale.value = withSpring(1);
-
-    setTimeout(() => {
-      dispatch({
-        type: "MATCH_FOUND",
-        payload: { cards: state.cards.slice(0, cardsToMatch), symbol: symbol.icon },
-      });
-      clearSelection();
-      dispatch({ type: "CLEAR_MATCH" });
-    }, 1000);
-  };
-
-  const handleNewGame = () => {
+  const handleNewGame = useCallback(() => {
     dispatch({ type: "RESET_GAME" });
     if (gameMode) {
       dispatch({ type: "SET_GAME_MODE", payload: gameMode });
-      dispatch({ type: "SET_PLAYERS", payload: ["Player 1", "Player 2"] });
+      dispatch({
+        type: "SET_PLAYERS",
+        payload: createPlayerNames(state.numPlayers || 2),
+      });
       dispatch({ type: "START_GAME" });
     }
     clearSelection();
-  };
+  }, [clearSelection, dispatch, gameMode, state.numPlayers]);
 
   const cardSize =
     cardsToMatch === 2
-      ? Math.min(screenWidth * 0.82, gameCanvasHeight / 2 - 22)
+      ? clamp(Math.min(vw(82), gameCanvasHeight / 2 - vh(3.2)), vw(52), vh(34))
       : getCardSize(cardsToMatch, screenWidth);
 
   return {
     cardSize,
     cardsToMatch,
-    dealtCardAnimatedStyle: useAnimatedStyle(() => ({
-      opacity: dealProgress.value,
-      transform: [
-        { translateX: (1 - dealProgress.value) * screenWidth * 0.32 },
-        { scale: 0.94 + dealProgress.value * 0.06 },
-      ],
-    })),
+    collectAnimatedStyle,
+    collectingCard,
+    collectingReceiverIndex,
+    dealtCardAnimatedStyle,
     handleNewGame,
     handleSymbolPress,
     matchedSymbol,
-    matchAnimatedStyle: useAnimatedStyle(() => ({
-      transform: [{ scale: matchScale.value }],
-      opacity: matchScale.value,
-    })),
+    memorySeconds,
+    memoryVisible,
+    matchMessage,
+    matchAnimatedStyle,
     selectedSymbols,
     showMatch,
   };
