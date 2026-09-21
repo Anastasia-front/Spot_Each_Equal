@@ -2,12 +2,13 @@ import { router } from "expo-router";
 import { ArrowLeft, Pause, Play, RotateCcw } from "lucide-react-native";
 import { Text, TouchableOpacity, View } from "react-native";
 
-import { gameStyles as styles } from "./game.styles";
+import { gameStyles as styles } from "../shared/game.styles";
 
 type GameHeaderProps = {
   backLabel: string;
   title: string;
   paused: boolean;
+  onBack?: () => void;
   onNewGame: () => void;
   onPauseToggle: () => void;
 };
@@ -16,11 +17,15 @@ const GameHeader = ({
   backLabel,
   title,
   paused,
+  onBack,
   onNewGame,
   onPauseToggle,
 }: GameHeaderProps) => (
   <View style={styles.header}>
-    <TouchableOpacity style={styles.headerButton} onPress={() => router.back()}>
+    <TouchableOpacity
+      style={styles.headerButton}
+      onPress={onBack ?? (() => router.back())}
+    >
       <ArrowLeft size={20} color="#667eea" />
       <Text style={styles.headerButtonText}>{backLabel}</Text>
     </TouchableOpacity>

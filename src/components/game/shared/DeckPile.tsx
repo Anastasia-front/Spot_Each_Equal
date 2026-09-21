@@ -1,7 +1,9 @@
 import { StyleSheet, Text, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 
-const TOTAL_STACK_CARDS = 55;
+import { rf, rs } from "./responsive";
+
+const TOTAL_STACK_CARDS = 56;
 
 type DeckPileProps = {
   size: number;
@@ -81,15 +83,15 @@ const styles = StyleSheet.create({
     left: "31%",
     top: "40%",
     backgroundColor: "#667eea",
-    borderRadius: 18,
-    minWidth: 36,
-    height: 36,
+    borderRadius: rs(18, 14, 24),
+    minWidth: rs(36, 29, 48),
+    height: rs(36, 29, 48),
     justifyContent: "center",
     alignItems: "center",
   },
   deckBadgeText: {
     color: "#FFFFFF",
-    fontSize: 13,
+    fontSize: rf(13, 11, 17),
     fontFamily: "Inter-Bold",
   },
 });

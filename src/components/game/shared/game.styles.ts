@@ -1,9 +1,10 @@
-import { Dimensions, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
 
-export const { width: screenWidth, height: screenHeight } =
-  Dimensions.get("window");
+import { rf, rs, screenHeight, vh } from "./responsive";
 
-export const gameCanvasHeight = screenHeight * 0.64;
+export { screenHeight, screenWidth } from "./responsive";
+
+export const gameCanvasHeight = screenHeight * 0.62;
 
 export const gameStyles = StyleSheet.create({
   safeArea: {
@@ -20,7 +21,7 @@ export const gameStyles = StyleSheet.create({
     alignItems: "center",
   },
   loadingText: {
-    fontSize: 18,
+    fontSize: rf(18),
     fontFamily: "Inter-Regular",
     color: "#666",
   },
@@ -28,8 +29,9 @@ export const gameStyles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    minHeight: vh(7.6),
+    paddingHorizontal: rs(20, 14, 28),
+    paddingVertical: rs(10, 8, 14),
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
     borderBottomColor: "#E1E8ED",
@@ -37,48 +39,52 @@ export const gameStyles = StyleSheet.create({
   headerButton: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    minHeight: rs(42, 36, 52),
+    paddingHorizontal: rs(12, 9, 18),
+    paddingVertical: rs(8, 6, 11),
     backgroundColor: "#F8F9FF",
-    borderRadius: 20,
-    marginHorizontal: 4,
+    borderRadius: rs(20, 16, 26),
+    marginHorizontal: rs(4, 2, 7),
   },
   headerButtonText: {
-    fontSize: 14,
+    fontSize: rf(14, 12, 17),
     fontFamily: "Inter-SemiBold",
     color: "#667eea",
-    marginLeft: 6,
+    marginLeft: rs(6, 4, 9),
   },
   headerActions: {
     flexDirection: "row",
   },
   gameModeTitle: {
-    fontSize: 20,
+    fontSize: rf(20, 18, 26),
     fontFamily: "Inter-Bold",
     color: "#2C3E50",
   },
   matchNotification: {
     position: "absolute",
-    top: 55,
+    top: vh(6.5),
     left: 0,
     right: 0,
     backgroundColor: "#4ECDC4",
-    paddingVertical: 15,
-    paddingHorizontal: 20,
+    paddingVertical: rs(15, 11, 20),
+    paddingHorizontal: rs(20, 14, 30),
     alignItems: "center",
     zIndex: 20,
   },
   matchText: {
-    fontSize: 18,
+    fontSize: rf(18),
     fontFamily: "Inter-Bold",
     color: "#FFFFFF",
-    marginBottom: 4,
+    marginBottom: rs(4, 3, 7),
   },
   matchSymbol: {
-    fontSize: 14,
+    fontSize: rf(14, 12, 17),
     fontFamily: "Inter-Regular",
     color: "#FFFFFF",
     opacity: 0.9,
+  },
+  matchSymbolName: {
+    fontFamily: "Inter-Bold",
   },
   pauseOverlay: {
     position: "absolute",
@@ -92,24 +98,24 @@ export const gameStyles = StyleSheet.create({
     zIndex: 1000,
   },
   pauseText: {
-    fontSize: 24,
+    fontSize: rf(24, 20, 32),
     fontFamily: "Inter-Bold",
     color: "#FFFFFF",
-    marginBottom: 20,
+    marginBottom: rs(20, 16, 28),
   },
   resumeButton: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#667eea",
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 25,
+    paddingHorizontal: rs(24, 18, 34),
+    paddingVertical: rs(12, 9, 17),
+    borderRadius: rs(25, 20, 32),
   },
   resumeButtonText: {
-    fontSize: 16,
+    fontSize: rf(16, 13, 20),
     fontFamily: "Inter-SemiBold",
     color: "#FFFFFF",
-    marginLeft: 8,
+    marginLeft: rs(8, 6, 12),
   },
   gameArea: {
     flex: 1,
@@ -135,16 +141,19 @@ export const gameStyles = StyleSheet.create({
   },
   instructions: {
     backgroundColor: "#FFFFFF",
-    paddingVertical: 15,
-    paddingHorizontal: 20,
+    minHeight: vh(8.1),
+    paddingVertical: rs(15, 10, 20),
+    paddingHorizontal: rs(20, 14, 30),
     borderTopWidth: 1,
     borderTopColor: "#E1E8ED",
   },
   instructionsText: {
-    fontSize: 16,
+    fontSize: rf(14, 12, 18),
     fontFamily: "Inter-Regular",
     color: "#666",
     textAlign: "center",
-    lineHeight: 22,
+    lineHeight: rf(20, 17, 25),
   },
 });
+
+export * from "./modeShared.styles";
