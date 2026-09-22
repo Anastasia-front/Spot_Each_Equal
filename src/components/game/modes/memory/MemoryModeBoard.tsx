@@ -1,8 +1,9 @@
 import HexagonCard from "@/components/HexagonCard";
 import { Text, View } from "react-native";
 
+import { getSelectedSymbolsForCard } from "@/utils";
 import { getModeCardSize } from "../../shared/responsive";
-import { getSelectedSymbolsForCard, SelectedSymbol } from "../../shared/types";
+import { SelectedSymbol } from "../../shared/types";
 import { memoryModeStyles as styles } from "./memoryMode.styles";
 
 type MemoryModeBoardProps = {

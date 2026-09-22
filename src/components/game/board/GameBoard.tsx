@@ -3,6 +3,7 @@ import { getCardPosition } from "@/utils";
 import { View } from "react-native";
 import Animated from "react-native-reanimated";
 
+import { getSelectedSymbolsForCard } from "@/utils";
 import DuelModeBoard from "../modes/duel/DuelModeBoard";
 import MemoryModeBoard from "../modes/memory/MemoryModeBoard";
 import ResetModeBoard from "../modes/reset/ResetModeBoard";
@@ -14,7 +15,7 @@ import {
   screenWidth,
   gameStyles as styles,
 } from "../shared/game.styles";
-import { getSelectedSymbolsForCard, SelectedSymbol } from "../shared/types";
+import { SelectedSymbol } from "../shared/types";
 
 type GameBoardProps = {
   cards: any[];

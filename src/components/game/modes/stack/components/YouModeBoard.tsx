@@ -1,13 +1,13 @@
 import HexagonCard from "@/components/HexagonCard";
 import { Text, View } from "react-native";
 
+import { getSelectedSymbolsForCard } from "@/utils";
 import { getModeCardSize, vh, vw } from "../../../shared/responsive";
-import { getSelectedSymbolsForCard } from "../../../shared/types";
-import CardWithCounter from "./CardWithCounter";
-import FlyingCard from "./FlyingCard";
 import { stackModeStyles as styles } from "../stackMode.styles";
 import { StackBoardProps } from "../types/stackMode.types";
 import OpponentCards from "../you/components/OpponentCards";
+import CardWithCounter from "./CardWithCounter";
+import FlyingCard from "./FlyingCard";
 
 const YouModeBoard = ({
   centerDeck,

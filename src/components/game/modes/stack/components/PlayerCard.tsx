@@ -1,10 +1,8 @@
 import HexagonCard from "@/components/HexagonCard";
 import { Text, View } from "react-native";
 
-import {
-  getSelectedSymbolsForCard,
-  SelectedSymbol,
-} from "../../../shared/types";
+import { getSelectedSymbolsForCard } from "@/utils";
+import { SelectedSymbol } from "../../../shared/types";
 import { stackModeStyles as styles } from "../stackMode.styles";
 import { StackCardPressHandler } from "../types/stackMode.types";
 
