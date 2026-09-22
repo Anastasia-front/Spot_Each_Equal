@@ -26,7 +26,13 @@ const GameSession = ({ gameMode, onBack }: GameSessionProps) => {
     dispatch({ type: state.gamePaused ? "RESUME_GAME" : "PAUSE_GAME" });
   };
 
-  if (!state.gameOver && !state.cards.length && !state.centerDeck.length) {
+  const hasBoardData =
+    state.cards.length > 0 ||
+    state.centerDeck.length > 0 ||
+    state.playerStacks.some((stack) => stack.length > 0) ||
+    state.memoryCards.length > 0;
+
+  if (!state.gameOver && !hasBoardData) {
     return (
       <SafeAreaView edges={["top"]} style={styles.container}>
         <View style={styles.loadingContainer}>
