@@ -61,6 +61,7 @@ const ScoresScreen = () => {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
+          style={styles.modeTabsScroller}
           contentContainerStyle={styles.modeTabs}
         >
           {gameModes.map((mode) => {
@@ -141,6 +142,11 @@ const styles = StyleSheet.create({
   modeTabs: {
     gap: 8,
     paddingBottom: 18,
+  },
+  modeTabsScroller: {
+    flexGrow: 0,
+    flexShrink: 0,
+    maxHeight: 56,
   },
   modeTab: {
     backgroundColor: "#FFFFFF",
